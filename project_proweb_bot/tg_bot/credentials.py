@@ -1,8 +1,7 @@
 TOKEN = '7886050826:AAGO06HEbhvusoOdTB80ZxSBlEsnlFKSorU'
+ 
+URL = 'https://a90c-192-166-230-205.ngrok-free.app/getpost/' 
 
-
-URL = 'https://4a80-192-166-230-205.ngrok-free.app/getpost/' 
-
-TELEGRAM_API_URL = f'https://api.telegram.org/bot{TOKEN}'
+TELEGRAM_API_URL = f'https://api.telegram.org/bot{TOKEN}/'
 
 
