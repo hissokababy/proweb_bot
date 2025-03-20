@@ -1,7 +1,9 @@
-TOKEN = '7886050826:AAGO06HEbhvusoOdTB80ZxSBlEsnlFKSorU'
- 
-URL = 'https://a90c-192-166-230-205.ngrok-free.app/getpost/' 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+TOKEN = os.getenv('TOKEN')
+
+URL = 'https://2bcc-192-166-230-205.ngrok-free.app/getpost/'
 
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TOKEN}/'
-
-
