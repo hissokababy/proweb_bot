@@ -4,15 +4,15 @@ from django.db import models
 
 
 class User(models.Model):
-    tg_id = models.IntegerField(primary_key=True)
+    tg_id = models.PositiveBigIntegerField(primary_key=True)
     username = models.CharField(max_length=150, verbose_name='Юзер пользователя', blank=True, null=True)
-    first_name = models.CharField(max_length=150, verbose_name='Имя пользователя', blank=True, null=True)
-    last_name = models.CharField(max_length=150, verbose_name='Фамилия пользователя', blank=True, null=True)
-    phone_number = models.CharField(max_length=30, verbose_name='Номер телефон пользователя', blank=True, null=True)
+    language_selected = models.CharField(choices={'ru': 'Russian', 'uz': 'Uzbek'}, max_length=15, default='ru', 
+                                         verbose_name='Выбранный язык')
 
     def __str__(self):
-        return self.username
+        return f'{self.tg_id} {self.username}'
     
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
