@@ -5,9 +5,11 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 
 from common.texts import texts
+from common.kbds import main_btns_inline, main_btns_reply
 # подключение бота
 import telebot
 from tg_bot.credentials import TOKEN
+
 
 bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
 
@@ -40,9 +42,9 @@ def handle_update(update):
 def start_message(message):
     chat_id = message['message']['chat']['id']
     text = texts['welcome']
-
-    bot.send_message(chat_id, text)
-
+    
+    bot.send_message(chat_id, 'Вас приветсвует центр современных профессий <b>PROWEB!</b>🤗', reply_markup=main_btns_reply())
+    bot.send_message(chat_id, text, reply_markup=main_btns_inline())
 
 
 
