@@ -6,7 +6,7 @@ def main_btns_inline_ru():
     
     btn = InlineKeyboardButton(text='Тех. поддержка', url='t.me/itsmylifestyle')
     btn1 = InlineKeyboardButton(text='Коворкинг', url='t.me/proweb_coworking')
-    btn2 = InlineKeyboardButton(text='Конкурсы🎉', url='t.me/proweb_coworking')
+    btn2 = InlineKeyboardButton(text='Конкурсы🎉', callback_data='konkursi')
     btn3 = InlineKeyboardButton(text='Посетить сайт', url='proweb.uz')
     btn4 = InlineKeyboardButton(text='Базовый курс', url='t.me/proweb_coworking')
     btn5 = InlineKeyboardButton(text='Оставить отзыв', url='t.me/proweb_coworking')

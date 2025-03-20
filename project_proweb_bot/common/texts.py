@@ -1,4 +1,6 @@
-texts_ru = {
+
+languages = {
+    'ru': {
 
     'welcome': f'''
 Данный бот разработан специально для студентов центра <b>PROWEB.</b>
@@ -32,12 +34,27 @@ texts_ru = {
 свяжется с вами лично в ближайщее время.
 ''',
 
-}
+    'konkursi': {
+        'photo': open('common/media/photo.webp', 'rb'),
+        'text': f'''
+Ежемесячно для студентов центра <b>PROWEB</b> проводятся конкурсы с ценными призами!🎉
 
+Для участия в конкурсах важно оставаться подписанным на нашего бота.
 
-texts_uz = {
+Подробные объявления с условиями конкурсов будут приходить личным сообщением всем подписчикам. Для того, чтобы оставаться
+подписанным, достаточно просто не удалять и не блокировать бота.
 
-    'welcome': f'''
+Также мы проводим дополнительные  конкурсы длянаших подчисчиков в Instagram, Youtube, Telegram, Facebook - подписывайтесь
+и участвуйте сразу в нескольких конкурсах.
+
+Всех удачи, шанс выиграть есть у каждого студента!🍀
+''',
+    }
+    },
+
+    'uz': 
+    {
+        'welcome': f'''
 Bu bot maxsus <b>PROWEB</b> markazi talabalari uchun yaratilgan.
 
 Bot imkoniyatlari:
@@ -69,5 +86,21 @@ qiyinchiliklarga duch kelsangiz, shikoyat yoki so'rov qoldirishingiz mumkin. Biz
 markaz ma'muriyati imkon qadar tezroq siz bilan shaxsan bog'lanadi. 
 ''',
 
+    'konkursi': {
+        'photo': open('common/media/photo.webp', 'rb'),
+        'text': f'''
+Qimmatbaho sovrinli tanlovlar har oy <b>PROWEB</b>
+markazi o'quvchilari uchun o'tkaziladi!🎉
 
+Tanlovlarda qatnashish uchun botimizga obuna bo'lishingiz kerak.
+
+Tanlov shartlari ko'rsatilgan batafsil xabarlar barcha obunachilarga shaxsiy xabar orqali yuboriladi. Obunani
+saqlab qolish uchun botni to'xtatmaslik yoki bloklamaligingiz kifoya.
+
+Shuningdek, biz Instagram, Youtube, Telegram, Facebookdagi obunachilarimiz uchun qo'shimcha tanlovlar o'tkazamiz - obuna
+bo'ling va bir vaqtning o'zida bir nechta tanlovlarda ishtirok eting.
+
+Hammaga omad, har bir talabada g'alaba qozonish imkoniyati bor!🍀
+''',}
+    },
 }
