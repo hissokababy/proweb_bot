@@ -1,14 +1,23 @@
-from requests import request
 import telebot
 from telebot import types
-from common.texts import languages
-from common.kbds import main_btns_inline_ru, main_btns_reply_ru, main_btns_inline_uz, main_btns_reply_uz
 
-from tg_bot.credentials import TOKEN
+from common.texts import texts
+from common.kbds import main_btns_inline_ru, main_btns_reply_ru
 
-from tg_bot.models import User
-# подключение бота
-from tg_bot.handlers import bot
+
+# from tg_bot.credentials import TOKEN
+# # подключение бота
+# bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
+
+# @bot.message_handler(commands=['start',])
+# def start_message(message: types.Message):
+#     chat_id = message.chat.id
+#     print(chat_id)
+
+#     bot.send_message(chat_id, 'Вас приветсвует центр современных профессий <b>PROWEB!</b>🤗', reply_markup=main_btns_reply_ru())
+    
+#     bot.send_message(chat_id, texts['ru']['welcome'], reply_markup=main_btns_inline_ru())
+
 
 # главный обработчик апдейта
 # def handle_update(update):

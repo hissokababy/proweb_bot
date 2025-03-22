@@ -1,61 +1,37 @@
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 
-# КНОПКИ НА РУССКОМ
-def main_btns_inline_ru():
+from common.texts import texts
+
+
+def main_btns_inline(lang, level):
     markup = InlineKeyboardMarkup(row_width=2)
+
+    buttons = texts[lang]['inline_btns'][level]
+
+    btn_lst = []
+
+    for i in buttons:
+       button = InlineKeyboardButton(text=i['text'], url=i['url'], callback_data=i['callback_data'])
+       btn_lst.append(button)
     
-    btn = InlineKeyboardButton(text='Тех. поддержка', url='t.me/itsmylifestyle')
-    btn1 = InlineKeyboardButton(text='Коворкинг', url='t.me/proweb_coworking')
-    btn2 = InlineKeyboardButton(text='Конкурсы🎉', callback_data='konkursi')
-    btn3 = InlineKeyboardButton(text='Посетить сайт', url='proweb.uz')
-    btn4 = InlineKeyboardButton(text='Базовый курс', url='t.me/proweb_coworking')
-    btn5 = InlineKeyboardButton(text='Оставить отзыв', url='t.me/proweb_coworking')
-    btn6 = InlineKeyboardButton(text='Правила обучния', url='t.me/proweb_coworking')
-    markup.add(btn, btn1, btn2, btn3,
-               btn4, btn5, btn6)
-    
+    for btn in btn_lst:
+        markup.add(btn)
 
     return markup
 
 
-def main_btns_reply_ru():
+def main_btns_reply(lang):
     markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    
-    btn = KeyboardButton(text='На главную ↩️')
-    btn1 = InlineKeyboardButton(text="O'zbek tili 🇺🇿")
-    btn2 = KeyboardButton(text='Поделится контактом', request_contact=True)
 
-    markup.add(btn, btn1, btn2)
-    
-    return markup
+    buttons = texts[lang]['reply_btns']['main']
 
+    btn_lst = []
 
-# КНОПКИ НА УЗБЕКСКОМ
-def main_btns_inline_uz():
-    markup = InlineKeyboardMarkup(row_width=2)
+    for i in buttons:
+       button = KeyboardButton(text=i['text'], request_contact=i['request_contact'])
+       btn_lst.append(button)
     
-    btn = InlineKeyboardButton(text='Texnik yoram', url='t.me/itsmylifestyle')
-    btn1 = InlineKeyboardButton(text='Kovorking', url='t.me/proweb_coworking')
-    btn2 = InlineKeyboardButton(text='Tanlovlar🎉', url='t.me/proweb_coworking')
-    btn3 = InlineKeyboardButton(text='Saytga tashrif buyurish', url='proweb.uz/uz')
-    btn4 = InlineKeyboardButton(text='Kompyuter asoslari', url='t.me/proweb_coworking')
-    btn5 = InlineKeyboardButton(text='Sharh qoldirish', url='t.me/proweb_coworking')
-    btn6 = InlineKeyboardButton(text="O'qish qoidalari", url='t.me/proweb_coworking')
-    markup.add(btn, btn1, btn2, btn3,
-               btn4, btn5, btn6)
+    for btn in btn_lst:
+        markup.add(btn)
     
     return markup
-
-
-def main_btns_reply_uz():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    
-    btn = KeyboardButton(text='Bosh sahifaga ↩️')
-    btn1 = InlineKeyboardButton(text="Русский язык 🇷🇺")
-    btn2 = KeyboardButton(text='Kontakt bilan ulashing', request_contact=True)
-
-    markup.add(btn, btn1, btn2)
-    
-    return markup
-
-
