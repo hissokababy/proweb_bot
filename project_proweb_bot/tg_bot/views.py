@@ -91,3 +91,11 @@ def callback_handler(call: types.CallbackQuery):
 
     elif call.data == 'comment':
        bot.send_message(chat_id, texts[user_lang]['wishes'], reply_markup=main_btns_inline(user_lang, 'wishes'))
+
+    elif call.data == 'complaint':
+       bot.send_message(chat_id, texts[user_lang]['complaints'])
+
+    elif call.data == 'rules':
+       bot.send_message(chat_id, texts[user_lang]['rules'])
+
+    

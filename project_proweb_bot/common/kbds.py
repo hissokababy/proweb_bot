@@ -11,11 +11,10 @@ def main_btns_inline(lang, level):
     btn_lst = []
 
     for i in buttons:
-       button = InlineKeyboardButton(text=i['text'], url=i['url'], callback_data=i['callback_data'])
+       button = InlineKeyboardButton(**i)
        btn_lst.append(button)
     
-    for btn in btn_lst:
-        markup.add(btn)
+    markup.add(*btn_lst)
 
     return markup
 
@@ -28,10 +27,8 @@ def main_btns_reply(lang):
     btn_lst = []
 
     for i in buttons:
-       button = KeyboardButton(text=i['text'], request_contact=i['request_contact'])
+       button = KeyboardButton(**i)
        btn_lst.append(button)
     
-    for btn in btn_lst:
-        markup.add(btn)
-    
+    markup.add(*btn_lst)
     return markup
