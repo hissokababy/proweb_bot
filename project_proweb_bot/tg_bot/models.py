@@ -2,12 +2,12 @@ from django.db import models
 
 from tg_bot.bot import bot
 from common.texts import texts
-from common.kbds import main_btns_inline
+from common.kbds import main_btns_reply
 
 # Create your models here.
 
 class User(models.Model):
-    tg_id = models.PositiveBigIntegerField(primary_key=True)
+    tg_id = models.PositiveBigIntegerField(verbose_name='Тг ид пользователя', unique=True)
     username = models.CharField(max_length=150, verbose_name='Юзер пользователя', blank=True, null=True)
     language_selected = models.CharField(choices={'ru': 'Russian', 'uz': 'Uzbek'}, max_length=15, default='ru', 
                                          verbose_name='Выбранный язык')
@@ -30,7 +30,7 @@ class UserAdmin(models.Model):
     def get_confirm(self):
         if self.confirmed_by_user == False:
             bot.send_message(self.user.tg_id, texts[self.user.language_selected]['confirm_admin'], 
-                             reply_markup=main_btns_inline(self.user.language_selected, 'confirm_admin'))
+                             reply_markup=main_btns_reply(self.user.language_selected, 'confirm_admin'))
             return 'Не подтверждено пользователем'
         else:
             return 'Подтверждено пользователем'
@@ -38,3 +38,18 @@ class UserAdmin(models.Model):
     class Meta:
         verbose_name = 'Администратора'
         verbose_name_plural = 'Администраторы'
+
+
+class Group(models.Model):
+    tg_id = models.BigIntegerField(verbose_name='Тг ид группы', unique=True)
+    course = models.CharField(max_length=150, verbose_name='Курс группы')
+    language = models.CharField(max_length=150, verbose_name='Язык группы')
+    days = models.CharField(max_length=150, verbose_name='Дни обучения группы')
+    time = models.CharField(max_length=150, verbose_name='Время обучения группы')
+
+    def __str__(self):
+        return f'{self.pk} {self.course} {self.language} {self.days} {self.time}'
+    
+    class Meta:
+        verbose_name = 'Группу'
+        verbose_name_plural = 'Группы'

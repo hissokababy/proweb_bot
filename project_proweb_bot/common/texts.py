@@ -134,6 +134,10 @@ Telegram: t.me/proweb_basics
 ''',
 
     'confirm_admin': f'<b>PROWEB</b> хочет назначить вас администратором, вы подтверждаете?',
+    
+    'private_mailing_state': {
+        'language': 'Выберите язык для'
+    },
 
 
     'reply_btns': 
@@ -150,8 +154,12 @@ Telegram: t.me/proweb_basics
         'mailing': [
         {'text': 'Рассылка в личные чаты пользователей'},
         {'text': 'Рассылка в группы студентов'},
+            ],
 
-    ],
+        'confirm_admin': [
+            {'text': 'Да, подтвеждаю ✅'},
+        ],
+
     },
 
 
@@ -175,11 +183,6 @@ Telegram: t.me/proweb_basics
             {'text': 'Отзывы 😍', 'url': 'https://proweb.uz/reviews/', 'callback_data': None},
             {'text': 'Жалобы и пожелания 😔', 'url': None, 'callback_data': 'complaint'},
         ],
-
-
-        'confirm_admin': [
-            {'text': 'Да, подтвеждаю ✅', 'callback_data': 'confirm'},
-            ],
     },
 
     
@@ -340,6 +343,11 @@ Telegram: t.me/proweb_basics
         {'text': 'Talabalar guruhlariga yuborish'},
 
     ],
+
+    'confirm_admin': [
+            {'text': 'Ha, tasdiqlayman ✅'},
+
+    ],
     
     
     },
@@ -368,10 +376,6 @@ Telegram: t.me/proweb_basics
             {'text': 'Shikoyat va istaklar 😔', 'callback_data': 'complaint'},
             ],
     
-    'confirm_admin': [
-            {'text': 'Ha, tasdiqlayman ✅', 'callback_data': 'confirm'},
-
-    ],
 
     },
     
