@@ -3,8 +3,8 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 from common.texts import texts
 
 
-def main_btns_inline(lang, level):
-    markup = InlineKeyboardMarkup(row_width=2)
+def main_btns_inline(lang, level, row=2):
+    markup = InlineKeyboardMarkup(row_width=row)
 
     buttons = texts[lang]['inline_btns'][level]
 
@@ -19,10 +19,10 @@ def main_btns_inline(lang, level):
     return markup
 
 
-def main_btns_reply(lang):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+def main_btns_reply(lang, level, row=2):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=row)
 
-    buttons = texts[lang]['reply_btns']['main']
+    buttons = texts[lang]['reply_btns'][level]
 
     btn_lst = []
 

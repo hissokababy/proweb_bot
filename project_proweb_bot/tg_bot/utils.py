@@ -1,4 +1,4 @@
-from tg_bot.models import User
+from tg_bot.models import User, UserAdmin
 
 # сохранение пользователя в бд
 def save_user(tg_user):
@@ -9,6 +9,8 @@ def save_user(tg_user):
 
     if not user:
         User.objects.create(tg_id=tg_id, username=username)
+    else:
+        return user
 
 # установить язык пользователя
 def set_user_lang(tg_id, lang):
@@ -21,3 +23,10 @@ def set_user_lang(tg_id, lang):
 def get_user_lang(tg_id):
     lan = User.objects.get(tg_id=tg_id).language_selected
     return lan
+
+
+# подтверждение админа пользователя
+def admin_confirm(tg_id):
+    user_admin = UserAdmin.objects.get(user__tg_id=tg_id)
+    user_admin.confirmed_by_user = True
+    user_admin.save()

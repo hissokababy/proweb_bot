@@ -133,15 +133,26 @@ Tel: +97 155 66 32
 Telegram: t.me/proweb_basics
 ''',
 
+    'confirm_admin': f'<b>PROWEB</b> хочет назначить вас администратором, вы подтверждаете?',
+
+
     'reply_btns': 
     
-    {'main': [
+    {
+        'main': [
         
         {'text': 'На главную ↩️'},
         {'text': "O'zbek tili 🇺🇿"},
         {'text': "Поделится контактом", 'request_contact': True},
 
-    ]},
+    ],
+    
+        'mailing': [
+        {'text': 'Рассылка в личные чаты пользователей'},
+        {'text': 'Рассылка в группы студентов'},
+
+    ],
+    },
 
 
     'inline_btns': 
@@ -163,9 +174,13 @@ Telegram: t.me/proweb_basics
         'wishes': [
             {'text': 'Отзывы 😍', 'url': 'https://proweb.uz/reviews/', 'callback_data': None},
             {'text': 'Жалобы и пожелания 😔', 'url': None, 'callback_data': 'complaint'},
-        ]
-    },
+        ],
 
+
+        'confirm_admin': [
+            {'text': 'Да, подтвеждаю ✅', 'callback_data': 'confirm'},
+            ],
+    },
 
     
 
@@ -307,16 +322,27 @@ Tel: +97 155 66 32
 Telegram: t.me/proweb_basics
 ''',
 
+    'confirm_admin': f'<b>PROWEB</b> sizni administrator sifatida tayinlamoqchi, tasdiqlaysizmi?',
 
     'reply_btns': 
     
-    {'main': [
+    {
+        'main': [
         
-        {'text': 'Bosh sahifaga ↩️', 'request_contact': None},
-        {'text': "Русский язык 🇷🇺", 'request_contact': None},
+        {'text': 'Bosh sahifaga ↩️'},
+        {'text': "Русский язык 🇷🇺"},
         {'text': "Kontakt bilan ulashing", 'request_contact': True},
 
-    ]},
+    ],
+
+    'mailing': [
+        {'text': 'Foydalanuvchilarning shaxsiy suhbatlariga yuborish'},
+        {'text': 'Talabalar guruhlariga yuborish'},
+
+    ],
+    
+    
+    },
 
 
     'inline_btns': 
@@ -334,13 +360,18 @@ Telegram: t.me/proweb_basics
 
     ],
     
-    'base_course': [{'text': 'Kompyuter asoslari kursiga yozilish', 'url': 't.me/proweb_basics', 'callback_data': None}],
+    'base_course': [{'text': 'Kompyuter asoslari kursiga yozilish', 'url': 't.me/proweb_basics'}],
     
 
     'wishes': [
-            {'text': 'Sharhlar 😍', 'url': 'https://proweb.uz/uz/reviews/', 'callback_data': None},
-            {'text': 'Shikoyat va istaklar 😔', 'url': None, 'callback_data': 'complaint'},
+            {'text': 'Sharhlar 😍', 'url': 'https://proweb.uz/uz/reviews/'},
+            {'text': 'Shikoyat va istaklar 😔', 'callback_data': 'complaint'},
             ],
+    
+    'confirm_admin': [
+            {'text': 'Ha, tasdiqlayman ✅', 'callback_data': 'confirm'},
+
+    ],
 
     },
     
