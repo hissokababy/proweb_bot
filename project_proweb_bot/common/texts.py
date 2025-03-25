@@ -1,7 +1,8 @@
 
 texts = {
-    'ru': {
 
+    'ru': {
+    
     'welcome': 
             {
         
@@ -132,14 +133,7 @@ Tel: +97 155 66 32
 <b>Базовый курс</b> 
 Telegram: t.me/proweb_basics
 ''',
-
-    'confirm_admin': f'<b>PROWEB</b> хочет назначить вас администратором, вы подтверждаете?',
     
-    'private_mailing_state': {
-        'language': 'Выберите язык для'
-    },
-
-
     'reply_btns': 
     
     {
@@ -151,15 +145,6 @@ Telegram: t.me/proweb_basics
 
     ],
     
-        'mailing': [
-        {'text': 'Рассылка в личные чаты пользователей'},
-        {'text': 'Рассылка в группы студентов'},
-            ],
-
-        'confirm_admin': [
-            {'text': 'Да, подтвеждаю ✅'},
-        ],
-
     },
 
 
@@ -325,8 +310,6 @@ Tel: +97 155 66 32
 Telegram: t.me/proweb_basics
 ''',
 
-    'confirm_admin': f'<b>PROWEB</b> sizni administrator sifatida tayinlamoqchi, tasdiqlaysizmi?',
-
     'reply_btns': 
     
     {
@@ -344,12 +327,7 @@ Telegram: t.me/proweb_basics
 
     ],
 
-    'confirm_admin': [
-            {'text': 'Ha, tasdiqlayman ✅'},
 
-    ],
-    
-    
     },
 
 

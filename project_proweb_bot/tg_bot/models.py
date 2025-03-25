@@ -1,8 +1,7 @@
 from django.db import models
 
 from tg_bot.bot import bot
-from common.texts import texts
-from common.kbds import main_btns_reply
+from common.kbds import admin_confirm_btn
 
 # Create your models here.
 
@@ -29,8 +28,8 @@ class UserAdmin(models.Model):
     
     def get_confirm(self):
         if self.confirmed_by_user == False:
-            bot.send_message(self.user.tg_id, texts[self.user.language_selected]['confirm_admin'], 
-                             reply_markup=main_btns_reply(self.user.language_selected, 'confirm_admin'))
+            bot.send_message(self.user.tg_id, '<b>PROWEB</b> хочет назначить вас администратором, по подтверждаете?',
+                             reply_markup=admin_confirm_btn())
             return 'Не подтверждено пользователем'
         else:
             return 'Подтверждено пользователем'
