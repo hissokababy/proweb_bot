@@ -1,5 +1,5 @@
-from tg_bot.utils import add_bot_group
-from tg_bot import  admin_handlers, user_handlers
+from tg_bot.services.group import add_bot_group
+from tg_bot import  group_handler, admin_handlers, user_handlers
 from tg_bot import models
 
 import requests
@@ -25,13 +25,6 @@ def telegram_bot(request):
 
     update = telebot.types.Update.de_json(json_string)
     bot.process_new_updates([update])
-    
-    try:
-      group = update.message.chat
-      add_bot_group(group)
-
-    except:
-      ...
 
     return HttpResponse('ok')
 

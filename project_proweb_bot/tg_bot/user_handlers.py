@@ -5,7 +5,9 @@ from telebot import types
 from common.texts import texts
 from common.kbds import main_btns_inline, main_btns_reply
 
-from tg_bot.utils import get_user_lang, is_admin, save_user, set_user_lang
+from tg_bot.services.admin import is_admin
+from tg_bot.services.user import get_user_lang, save_user, set_user_lang
+
 
 from tg_bot.admin_handlers import admin_panel
 

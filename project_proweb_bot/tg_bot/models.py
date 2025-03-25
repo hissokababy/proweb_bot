@@ -45,6 +45,7 @@ class Group(models.Model):
     language = models.CharField(max_length=150, verbose_name='Язык группы')
     days = models.CharField(max_length=150, verbose_name='Дни обучения группы')
     time = models.CharField(max_length=150, verbose_name='Время обучения группы')
+    is_in_group = models.BooleanField(default=False, verbose_name='В группе')
 
     def __str__(self):
         return f'{self.pk} {self.course} {self.language} {self.days} {self.time}'

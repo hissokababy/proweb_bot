@@ -52,10 +52,11 @@ def mailing_languages():
    btn1 = KeyboardButton(text='Русский 🇷🇺')
    btn2 = KeyboardButton(text="O'zbek tili 🇺🇿")
    btn3 = KeyboardButton(text='Главное меню ↩️')
+   btn4 = KeyboardButton(text='Далее')
 
    markup.add(btn)
    markup.add(btn1, btn2)
-   markup.add(btn3)
+   markup.add(btn3, btn4)
    return markup
 
 def mailing_courses():
@@ -65,16 +66,10 @@ def mailing_courses():
    btn2 = KeyboardButton(text="Web Programming")
    btn3 = KeyboardButton(text="Pro Design")
    btn4 = KeyboardButton(text='Главное меню ↩️')
+   btn5 = KeyboardButton(text='Далее')
 
    markup.add(btn)
    markup.add(btn1, btn2, btn3)
-   markup.add(btn4)
+   markup.add(btn4, btn5)
    return markup
 
-
-
-def continue_or_back():
-   markup = InlineKeyboardMarkup(row_width=2)
-   btn = InlineKeyboardButton(text='Далее', callback_data='state_continue')
-   btn1 = InlineKeyboardButton(text='Назад ↩️', callback_data='state_back')
-   return markup.add(btn1, btn)
