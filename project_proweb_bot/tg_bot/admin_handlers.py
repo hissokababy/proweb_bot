@@ -1,10 +1,12 @@
 import telebot
-from telebot import custom_filters, types
+from telebot import types
 from telebot.states import State, StatesGroup
 from telebot.states.sync.context import StateContext
 
-from common.kbds import admin_panel_btn, go_back_or_continue_btns, go_back_or_finish_state, mailing_courses, mailing_languages, main_btns_inline, main_btns_reply
+from common.kbds import (admin_panel_btn, go_to_menu, go_back_or_mail, 
+                         mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
+from tg_bot.utils import is_continue_btn, is_main_btn
 from tg_bot.services.admin import admin_confirm, is_admin
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
@@ -16,7 +18,6 @@ def admin_start_panel(message: types.Message):
     chat_id = message.chat.id
     save_user(tg_user=message.from_user)
 
-    
     if is_admin(chat_id):
         bot.send_message(chat_id, 'Админ панель', reply_markup=admin_panel_btn())
 
@@ -38,8 +39,7 @@ def admin_panel(call: types.CallbackQuery):
 class GroupMailing(StatesGroup):
     language = State()
     course = State()
-    message = State()
-    photos = State()
+    post = State()
 
 
 @bot.message_handler(func=lambda message: message.text == 'Рассылка в группы студентов')
@@ -51,48 +51,30 @@ def group_mailing(message: types.Message, state: StateContext):
         bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages())
     
 
-# гланое меню кнопка 
-@bot.message_handler(state="*", func=lambda message: message.text == 'Главное меню ↩️' or message.text == 'Далее')
-def any_state(message: types.Message, state: StateContext):
+# обраюотчик кнопка главное меню 
+@bot.message_handler(state=[GroupMailing.language, GroupMailing.course, GroupMailing.post])
+def main_menu_btn_handler(message: types.Message, state: StateContext):
+    
+    if is_main_btn(message.text):
+        admin_start_panel(message)
+
+
+# обраюотчик кнопка далее 
+@bot.message_handler(state=[GroupMailing.language, GroupMailing.course])
+def continue_handler(message: types.Message, state: StateContext):
     chat_id = message.chat.id
 
-    if message.text == 'Главное меню ↩️':
-        state.delete()
-        bot.send_message(chat_id, 'Админ панель', reply_markup=admin_panel_btn())
-    
-    elif message.text == 'Далее':
+    if is_continue_btn(message.text):
         current_state = state.get()
-        print(current_state)
-        
-        if current_state == "GroupMailing:language":
-            state.set('GroupMailing:course')
+        if current_state == GroupMailing.language.name:
             bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses())
+            state.set(GroupMailing.course)
 
-            print(state.get())
-                
-        elif current_state == "GroupMailing:course":
-            state.set('GroupMailing:message')
-            bot.send_message(chat_id, f"Введите текст", reply_markup=go_back_or_continue_btns())
+        elif current_state == GroupMailing.course.name:
+            bot.send_message(chat_id, f"Введите пост для рассылки", reply_markup=go_to_menu())
+            state.set(GroupMailing.post)
 
 
-        elif current_state == "GroupMailing:message":
-            state.set('GroupMailing:photos')
-            bot.send_message(chat_id, f"Отправьте фото или видео")
-        
-        elif current_state == "GroupMailing:photos":
-            with state.data() as data:
-                languages = data.get('language')
-                courses = data.get('course')
-                text = data.get('text')
-                photos = data.get('photos')
-            bot.send_message(chat_id, f'''
-Язык: {languages}
-Курс: {courses}
-Текст: {text}
-Фото: {photos}
-''')
-
-                        
 @bot.message_handler(state=GroupMailing.language)
 def get_language(message: types.Message, state: StateContext):
     chat_id = message.chat.id
@@ -100,7 +82,7 @@ def get_language(message: types.Message, state: StateContext):
     if message.text == 'Все языки':
         state.add_data(language='Все языки')
         bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses())
-        state.set('GroupMailing:course')
+        state.set(GroupMailing.course)
             
     else:
         with state.data() as data:
@@ -114,8 +96,11 @@ def get_language(message: types.Message, state: StateContext):
         else:
             chosen_languages.remove(message.text)
 
-        bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages())
-        
+        if len(chosen_languages) >= 1:
+            bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages())
+        else:
+            bot.send_message(chat_id, 'Выберите язык')
+
 
 @bot.message_handler(state=GroupMailing.course) 
 def course_state(message: types.Message, state: StateContext):
@@ -123,8 +108,8 @@ def course_state(message: types.Message, state: StateContext):
     
     if message.text == 'Все курсы':
         state.add_data(course='Все курсы')
-        bot.send_message(chat_id, f"Введите текст", reply_markup=go_back_or_continue_btns())
-        state.set(GroupMailing.message)
+        bot.send_message(chat_id, f"Введите пост для рассылки", reply_markup=go_to_menu())
+        state.set(GroupMailing.post)
     
     else:
         with state.data() as data:
@@ -138,110 +123,11 @@ def course_state(message: types.Message, state: StateContext):
         else:
             chosen_courses.remove(message.text)
 
-        bot.send_message(chat_id, f"<b>Выбранные курсы:</b> {', '.join(chosen_courses)}", reply_markup=mailing_courses())
-        
-    
 
-@bot.message_handler(state=GroupMailing.message) 
-def message_state(message: types.Message, state: StateContext):
-    chat_id = message.chat.id
+        if len(chosen_courses) >= 1:
 
-    state.add_data(text=message.text)
+            bot.send_message(chat_id, f"<b>Выбранные курсы:</b> {', '.join(chosen_courses)}", reply_markup=mailing_courses())
 
-    bot.send_message(chat_id, 'Отправьте фото или видео')
-    state.set(GroupMailing.photos)
-
-
-@bot.message_handler(state=GroupMailing.photos, content_types=['photo', 'video']) 
-def photos_state(message: types.Message, state: StateContext):
-    chat_id = message.chat.id
-    
-    if message.video:
-        video = message.video.file_id
-
-        bot.send_message(chat_id, 'Видео добавлено', reply_markup=go_back_or_finish_state())
-        
-        with state.data() as data:
-            videos_sent = data.get("photos")
-            if not videos_sent:
-                videos_sent = []
-            
-        if video not in videos_sent:
-            videos_sent.append(video)
-            state.add_data(photos=videos_sent)
         else:
-            videos_sent.remove(video)
+            bot.send_message(chat_id, 'Выберите курс')
 
-
-    elif message.photo:
-        photo = message.photo[-1].file_id
-
-        bot.send_message(chat_id, 'Фото добавлено', reply_markup=go_back_or_finish_state())
-        
-        with state.data() as data:
-            photos_sent = data.get("photos")
-            if not photos_sent:
-                photos_sent = []
-            
-        if photo not in photos_sent:
-            photos_sent.append(photo)
-            state.add_data(photos=photos_sent)
-        else:
-            photos_sent.remove(photo)
-    
-
-@bot.message_handler(state=GroupMailing.photos, func=lambda message: message.text == 'Завершить ✅') 
-def photos_state(message: types.Message, state: StateContext):
-    chat_id = message.chat.id
-
-    with state.data() as data:
-        text = data.get('text')
-        photos = data.get('photos')
-
-    if len(photos) > 1:
-        try:
-            photo_group = []
-
-            for photo in photos:
-                if photo == photos[0]:
-                    photo_group.append(types.InputMediaPhoto(photo, caption=text[-1]))
-                else:
-                    photo_group.append(types.InputMediaPhoto(photo))
-
-            bot.send_media_group(chat_id, media=photo_group)
-
-        except:
-            video_group = []
-
-            for video in photos:
-                if video == photos[0]:
-                    video_group.append(types.InputMediaVideo(video, caption=text[-1]))
-                else:
-                    video_group.append(types.InputMediaVideo(video))
-
-            bot.send_media_group(chat_id, media=video_group)
-
-    else:
-        try:
-            bot.send_photo(chat_id, photo=photos[-1], caption=text)
-
-        except:
-            bot.send_video(chat_id, video=photos[-1], caption=text)
-
-    state.delete()
-
-
-@bot.message_handler(func=lambda message: message.text == 'Главное меню ↩️' or message.text == 'Завершить ✅')
-def handle_main_menu_or_finish(message: types.Message):
-    if message.text == 'Главное меню ↩️':
-        admin_start_panel(message)
-
-
-bot.add_custom_filter(custom_filters.StateFilter(bot))
-bot.add_custom_filter(custom_filters.IsDigitFilter())
-bot.add_custom_filter(custom_filters.TextMatchFilter())
-
-# necessary for state parameter in handlers.
-from telebot.states.sync.middleware import StateMiddleware
-
-bot.setup_middleware(StateMiddleware(bot))

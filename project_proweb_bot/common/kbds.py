@@ -75,19 +75,18 @@ def mailing_courses():
 
 
 
-def go_back_or_continue_btns():
+def go_to_menu():
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
    btn = KeyboardButton(text='Главное меню ↩️')
-   btn1 = KeyboardButton(text='Далее')
 
-   markup.add(btn, btn1)
+   markup.add(btn)
    return markup
 
 
-def go_back_or_finish_state():
+def go_back_or_mail():
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
    btn = KeyboardButton(text='Главное меню ↩️')
-   btn1 = KeyboardButton(text='Завершить ✅')
+   btn1 = KeyboardButton(text='Переслать')
 
    markup.add(btn, btn1)
    return markup
