@@ -73,3 +73,12 @@ def mailing_courses():
    markup.add(btn4, btn5)
    return markup
 
+
+
+def go_back_or_continue_btns():
+   markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+   btn = KeyboardButton(text='Главное меню ↩️')
+   btn1 = KeyboardButton(text='Далее')
+
+   markup.add(btn, btn1)
+   return markup
