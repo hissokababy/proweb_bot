@@ -3,12 +3,12 @@ from telebot import types
 from telebot.states import State, StatesGroup
 from telebot.states.sync.context import StateContext
 
-from common.kbds import (admin_panel_btn, go_to_menu, go_back_or_mail, 
+from common.kbds import (MAILING_BTN, admin_panel_btn, go_to_menu, go_back_or_mail, 
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
 from tg_bot.models import User
 from tg_bot.services.group import get_group_field
-from tg_bot.utils import is_continue_btn, is_main_btn
+from tg_bot.utils import is_continue_btn, is_main_btn, is_sending_btn
 from tg_bot.services.admin import admin_confirm, is_admin
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
@@ -42,6 +42,8 @@ class GroupMailing(StatesGroup):
     language = State()
     course = State()
     post = State()
+    media_group_caption = State()
+    sending = State()
 
 
 @bot.message_handler(func=lambda message: message.text == 'Рассылка в группы студентов')
@@ -123,7 +125,7 @@ def course_state(message: types.Message, state: StateContext):
     
     if message.text == 'Все курсы':
         state.add_data(course='Все курсы')
-        bot.send_message(chat_id, f"Введите пост для рассылки", reply_markup=go_to_menu())
+        bot.send_message(chat_id, f"Отправьте пост для рассылки", reply_markup=go_to_menu())
         state.set(GroupMailing.post)
     
     else:
@@ -145,4 +147,40 @@ def course_state(message: types.Message, state: StateContext):
 
         else:
             bot.send_message(chat_id, 'Выберите курс')
+
+
+
+
+@bot.message_handler(state=[GroupMailing.post, GroupMailing.sending], func=lambda message: is_sending_btn(message.text)) 
+def sending_state(message: types.Message, state: StateContext):
+    chat_id = message.chat.id
+
+    state.set(GroupMailing.sending)
+    
+    with state.data() as data:
+        post_data = data.get("post")
+        media_group_caption = data.get('media_group_caption')
+
+    for item in post_data:
+        if item['type'] == 'video':
+            bot.send_video(chat_id, video=item['video_id'], caption=item['caption'])
+
+        elif item['type'] == 'photo':
+            bot.send_photo(chat_id, photo=item['photo_id'], caption=item['caption'])
+        
+        elif item['type'] == 'group_photo':
+            group = [types.InputMediaPhoto(media=item['photo_id'], caption=media_group_caption) for i in post_data]
+            bot.send_media_group(chat_id, media=group)
+
+    state.delete()
+    admin_start_panel(message)
+
+
+from tg_bot.services.admin import add_post_to_state
+
+@bot.message_handler(state=GroupMailing.post, content_types=['text', 'photo', 'video']) 
+def post_state(message: types.Message, state: StateContext):
+    chat_id = message.chat.id
+    add_post_to_state(state, message)
+
 

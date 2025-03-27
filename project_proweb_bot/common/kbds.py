@@ -79,11 +79,13 @@ def go_to_menu():
    markup.add(btn)
    return markup
 
+MAILING_BTN = 'Рассылать'
 
 def go_back_or_mail():
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
    btn = KeyboardButton(text=BACK_TO_MENU_BTN)
-   btn1 = KeyboardButton(text='Переслать')
-
-   markup.add(btn, btn1)
+   btn1 = KeyboardButton(text=MAILING_BTN)
+   
+   markup.add(btn1)
+   markup.add(btn)
    return markup
