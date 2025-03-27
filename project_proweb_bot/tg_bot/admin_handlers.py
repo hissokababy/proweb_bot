@@ -6,6 +6,8 @@ from telebot.states.sync.context import StateContext
 from common.kbds import (admin_panel_btn, go_to_menu, go_back_or_mail, 
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
+from tg_bot.models import User
+from tg_bot.services.group import get_group_field
 from tg_bot.utils import is_continue_btn, is_main_btn
 from tg_bot.services.admin import admin_confirm, is_admin
 from tg_bot.services.user import get_user_lang, save_user
@@ -48,31 +50,44 @@ def group_mailing(message: types.Message, state: StateContext):
     state.set(GroupMailing.language)
     
     if is_admin(chat_id):
-        bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages())
+        bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages(get_group_field(language=True)))
     
 
 # обраюотчик кнопка главное меню 
-@bot.message_handler(state=[GroupMailing.language, GroupMailing.course, GroupMailing.post])
+@bot.message_handler(state=[GroupMailing.language, GroupMailing.course, GroupMailing.post], 
+                     func=lambda message: is_main_btn(message.text))
 def main_menu_btn_handler(message: types.Message, state: StateContext):
     
-    if is_main_btn(message.text):
-        admin_start_panel(message)
+    admin_start_panel(message)
+    state.delete()
 
 
 # обраюотчик кнопка далее 
-@bot.message_handler(state=[GroupMailing.language, GroupMailing.course])
+@bot.message_handler(state=[GroupMailing.language, GroupMailing.course], 
+                     func=lambda message: is_continue_btn(message.text))
 def continue_handler(message: types.Message, state: StateContext):
     chat_id = message.chat.id
+    
+    with state.data() as data:
+        language = data.get('language')
+        course = data.get('course')
 
-    if is_continue_btn(message.text):
-        current_state = state.get()
-        if current_state == GroupMailing.language.name:
-            bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses())
+    current_state = state.get()
+    if current_state == GroupMailing.language.name:
+        if language:
+            bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_field(course=True)))            
             state.set(GroupMailing.course)
 
-        elif current_state == GroupMailing.course.name:
+        else:
+            bot.send_message(chat_id, 'Выберите хотябы один язык')
+
+    elif current_state == GroupMailing.course.name:
+        if course:
             bot.send_message(chat_id, f"Введите пост для рассылки", reply_markup=go_to_menu())
             state.set(GroupMailing.post)
+        
+        else:
+            bot.send_message(chat_id, 'Выберите хотябы один курс')
 
 
 @bot.message_handler(state=GroupMailing.language)
@@ -81,7 +96,7 @@ def get_language(message: types.Message, state: StateContext):
     
     if message.text == 'Все языки':
         state.add_data(language='Все языки')
-        bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses())
+        bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_field(course=True)))
         state.set(GroupMailing.course)
             
     else:
@@ -97,7 +112,7 @@ def get_language(message: types.Message, state: StateContext):
             chosen_languages.remove(message.text)
 
         if len(chosen_languages) >= 1:
-            bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages())
+            bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages(get_group_field(language=True)))
         else:
             bot.send_message(chat_id, 'Выберите язык')
 
@@ -126,7 +141,7 @@ def course_state(message: types.Message, state: StateContext):
 
         if len(chosen_courses) >= 1:
 
-            bot.send_message(chat_id, f"<b>Выбранные курсы:</b> {', '.join(chosen_courses)}", reply_markup=mailing_courses())
+            bot.send_message(chat_id, f"<b>Выбранные курсы:</b> {', '.join(chosen_courses)}", reply_markup=mailing_courses(get_group_field(course=True)))
 
         else:
             bot.send_message(chat_id, 'Выберите курс')

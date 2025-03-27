@@ -1,8 +1,7 @@
 from django.db import models
 
 from tg_bot.bot import bot
-from common.kbds import admin_confirm_btn
-
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # Create your models here.
 
 class User(models.Model):
@@ -29,7 +28,7 @@ class UserAdmin(models.Model):
     def get_confirm(self):
         if self.confirmed_by_user == False:
             bot.send_message(self.user.tg_id, '<b>PROWEB</b> хочет назначить вас администратором, по подтверждаете?',
-                             reply_markup=admin_confirm_btn())
+                             reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text='Да, подтверждаю ✅', callback_data='confirm')))
             return 'Не подтверждено пользователем'
         else:
             return 'Подтверждено пользователем'

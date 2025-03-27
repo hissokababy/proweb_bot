@@ -33,12 +33,6 @@ def main_btns_reply(lang, level, row=2):
     return markup
 
 
-def admin_confirm_btn():
-   markup = InlineKeyboardMarkup(row_width=1)
-   btn = InlineKeyboardButton(text='Да, подтверждаю ✅', callback_data='confirm')
-   return markup.add(btn)
-
-
 def admin_panel_btn():
    markup = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
    btn = KeyboardButton(text='Рассылка в личные чаты пользователей')
@@ -46,30 +40,33 @@ def admin_panel_btn():
    return markup.add(btn, btn1)
 
 
-def mailing_languages():
+CONTINUE_BTN = 'Далее'
+BACK_TO_MENU_BTN = 'Главное меню ↩️'
+
+def mailing_languages(LANGUAGES):
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
    btn = KeyboardButton(text="Все языки")
-   btn1 = KeyboardButton(text='Русский 🇷🇺')
-   btn2 = KeyboardButton(text="O'zbek tili 🇺🇿")
-   btn3 = KeyboardButton(text='Главное меню ↩️')
-   btn4 = KeyboardButton(text='Далее')
+
+   langs = [KeyboardButton(text=i) for i in LANGUAGES]
+
+   btn3 = KeyboardButton(text=BACK_TO_MENU_BTN)
+   btn4 = KeyboardButton(text=CONTINUE_BTN)
 
    markup.add(btn)
-   markup.add(btn1, btn2)
+   markup.add(*langs)
    markup.add(btn3, btn4)
    return markup
 
-def mailing_courses():
+def mailing_courses(COURSES):
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
    btn = KeyboardButton(text="Все курсы")
-   btn1 = KeyboardButton(text='PYTHON')
-   btn2 = KeyboardButton(text="Web Programming")
-   btn3 = KeyboardButton(text="Pro Design")
-   btn4 = KeyboardButton(text='Главное меню ↩️')
-   btn5 = KeyboardButton(text='Далее')
+   courses = [KeyboardButton(text=i) for i in COURSES]
+
+   btn4 = KeyboardButton(text=BACK_TO_MENU_BTN)
+   btn5 = KeyboardButton(text=CONTINUE_BTN)
 
    markup.add(btn)
-   markup.add(btn1, btn2, btn3)
+   markup.add(*courses)
    markup.add(btn4, btn5)
    return markup
 
@@ -77,7 +74,7 @@ def mailing_courses():
 
 def go_to_menu():
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-   btn = KeyboardButton(text='Главное меню ↩️')
+   btn = KeyboardButton(text=BACK_TO_MENU_BTN)
 
    markup.add(btn)
    return markup
@@ -85,7 +82,7 @@ def go_to_menu():
 
 def go_back_or_mail():
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-   btn = KeyboardButton(text='Главное меню ↩️')
+   btn = KeyboardButton(text=BACK_TO_MENU_BTN)
    btn1 = KeyboardButton(text='Переслать')
 
    markup.add(btn, btn1)

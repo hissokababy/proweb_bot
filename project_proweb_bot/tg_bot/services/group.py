@@ -15,19 +15,29 @@ def add_bot_group(group):
                     language = title[2]
                     days = title[3]
                     time = title[-1]
-                    group = Group.objects.filter(tg_id=tg_id).exists()
+                    
+                    defaults = {'course': course, 'language': language, 
+                                'days': days, 'time': time, 'is_in_group': True}
+                    
+                    group, created = Group.objects.update_or_create(tg_id=tg_id, defaults=defaults)
 
-                    if not group:
-                        Group.objects.create(tg_id=tg_id,
-                                     course=course,
-                                     language=language,
-                                     days=days,
-                                     time=time,
-                                     is_in_group=True)
 
 # обработка удаления бота из группы
 def left_bot_group(tg_group_id):
     group = Group.objects.get(tg_id=tg_group_id)
     group.is_in_group = False
     group.save()
+
+
+# получение всех языков/курсов групп
+def get_group_field(language=None, course=None):
+    all = []
+    for i in Group.objects.all():
+        if language:
+            if i.language not in all:
+                all.append(i.language)
+        elif course:
+            if i.course not in all:
+                all.append(i.course)
+    return all
 
