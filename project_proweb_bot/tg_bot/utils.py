@@ -14,7 +14,6 @@ def is_sending_btn(text):
         return True
 
 
-
 def is_group_mailing_btn(text):
     if text == GROUP_MAILING_BTN:
         return True

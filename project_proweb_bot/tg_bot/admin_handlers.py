@@ -3,10 +3,10 @@ from telebot import types
 from telebot.states import State, StatesGroup
 from telebot.states.sync.context import StateContext
 
-from common.kbds import (admin_panel_btn, go_to_menu, go_back_or_mail, 
+from common.kbds import (ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, admin_panel_btn, go_to_menu, go_back_or_mail, 
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
-from tg_bot.services.group import get_group_field
+from tg_bot.services.group import get_group_or_user_field
 from tg_bot.utils import is_continue_btn, is_group_mailing_btn, is_main_btn, is_private_mailing_btn, is_sending_btn
 from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
@@ -51,17 +51,17 @@ def group_mailing(message: types.Message, state: StateContext):
     
     if is_admin(chat_id):
         state.set(GroupMailing.language)
-        bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages(get_group_field(language=True)))
+        bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
     
 
 # расслыка по личным чатам
 @bot.message_handler(func=lambda message: is_private_mailing_btn(message.text))
-def group_mailing(message: types.Message, state: StateContext):
+def private_mailing(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
     if is_admin(chat_id):
         state.set(GroupMailing.language)
-        bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_field(language=True)))
+        bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_or_user_field(private=True)))
     
 
 # обраюотчик кнопка главное меню 
@@ -79,19 +79,26 @@ def main_menu_btn_handler(message: types.Message, state: StateContext):
 def continue_handler(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
+    users_langs = get_group_or_user_field(private=True)
+
     with state.data() as data:
         language = data.get('language')
         course = data.get('course')
 
     current_state = state.get()
-    if current_state == GroupMailing.language.name:
+
+    if current_state == GroupMailing.language.name and language[0] in users_langs:
+        bot.send_message(chat_id, f"Введите пост для рассылки", reply_markup=go_to_menu())
+        state.set(GroupMailing.post)
+
+    elif current_state == GroupMailing.language.name:
         if language:
-            bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_field(course=True)))            
+            bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_or_user_field(course=True)))            
             state.set(GroupMailing.course)
 
         else:
             bot.send_message(chat_id, 'Выберите хотябы один язык')
-
+    
     elif current_state == GroupMailing.course.name:
         if course:
             bot.send_message(chat_id, f"Введите пост для рассылки", reply_markup=go_to_menu())
@@ -105,10 +112,18 @@ def continue_handler(message: types.Message, state: StateContext):
 def get_language(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
-    if message.text == 'Все языки':
-        state.add_data(language='Все языки')
-        bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_field(course=True)))
+    users_langs = get_group_or_user_field(private=True)
+
+    if message.text == ALL_GROUP_LANGUAGES:
+        state.add_data(language=message.text)
+        bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_or_user_field(course=True)))
         state.set(GroupMailing.course)
+
+    elif message.text == ALL_USERS_LANGUAGES:
+        state.add_data(language=message.text)
+        bot.send_message(chat_id, f"Отправляйте пост", reply_markup=go_to_menu())
+        state.set(GroupMailing.post)
+
             
     else:
         with state.data() as data:
@@ -123,7 +138,11 @@ def get_language(message: types.Message, state: StateContext):
             chosen_languages.remove(message.text)
 
         if len(chosen_languages) >= 1:
-            bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages(get_group_field(language=True)))
+            if not message.text in users_langs:
+                bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
+            else:
+                bot.send_message(chat_id, f"<b>Выбранные языки:</b> {', '.join(chosen_languages)}", reply_markup=mailing_languages(get_group_or_user_field(private=True)))
+
         else:
             bot.send_message(chat_id, 'Выберите язык')
 
@@ -152,11 +171,10 @@ def course_state(message: types.Message, state: StateContext):
 
         if len(chosen_courses) >= 1:
 
-            bot.send_message(chat_id, f"<b>Выбранные курсы:</b> {', '.join(chosen_courses)}", reply_markup=mailing_courses(get_group_field(course=True)))
+            bot.send_message(chat_id, f"<b>Выбранные курсы:</b> {', '.join(chosen_courses)}", reply_markup=mailing_courses(get_group_or_user_field(course=True)))
 
         else:
             bot.send_message(chat_id, 'Выберите курс')
-
 
 
 

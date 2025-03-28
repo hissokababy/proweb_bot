@@ -1,6 +1,6 @@
 # добавление группы бота
 import re
-from tg_bot.models import Group
+from tg_bot.models import Group, User
 
 
 def add_bot_group(group):
@@ -30,26 +30,20 @@ def left_bot_group(tg_group_id):
     group.save()
 
 
-# получение всех языков/курсов групп
-def get_group_field(language=None, course=None):
+# получение всех языков/курсов групп/пользователей
+def get_group_or_user_field(language=None, course=None, private=None):
     all = []
-    for i in Group.objects.filter(is_in_group=True):
-        if language:
-            if i.language not in all:
-                all.append(i.language)
-        elif course:
-            if i.course not in all:
-                all.append(i.course)
+    if not private:
+        for i in Group.objects.filter(is_in_group=True):
+            if language:
+                if i.language not in all:
+                    all.append(i.language)
+            elif course:
+                if i.course not in all:
+                    all.append(i.course)
+    else:
+        for i in User.objects.all():
+            if i.language_selected not in all:
+                all.append(i.language_selected)
+    
     return all
-
-# # получение всех языков пользователей
-# def get_users_languages():
-#     all = []
-#     for i in Group.objects.filter(is_in_group=True):
-#         if language:
-#             if i.language not in all:
-#                 all.append(i.language)
-#         elif course:
-#             if i.course not in all:
-#                 all.append(i.course)
-#     return all

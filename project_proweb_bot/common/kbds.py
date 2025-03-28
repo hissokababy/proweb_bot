@@ -46,14 +46,19 @@ def admin_panel_btn():
 
 CONTINUE_BTN = 'Далее'
 BACK_TO_MENU_BTN = 'Главное меню ↩️'
-ALL_LANGUAGES = 'Все языки'
+ALL_GROUP_LANGUAGES = 'Все языки групп'
+ALL_USERS_LANGUAGES = 'Все языки пользователей'
 ALL_COURSES = 'Все курсы'
 MAILING_BTN = 'Рассылать'
 
 
-def mailing_languages(LANGUAGES):
+def mailing_languages(LANGUAGES, groups=None):
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-   btn = KeyboardButton(text=ALL_LANGUAGES)
+
+   if not groups:
+      btn = KeyboardButton(text=ALL_USERS_LANGUAGES)
+   else:
+      btn = KeyboardButton(text=ALL_GROUP_LANGUAGES)
 
    langs = [KeyboardButton(text=i) for i in LANGUAGES]
 
@@ -96,3 +101,8 @@ def go_back_or_mail():
    markup.add(btn1)
    markup.add(btn)
    return markup
+
+
+
+
+
