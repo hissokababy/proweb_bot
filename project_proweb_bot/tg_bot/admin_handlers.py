@@ -6,10 +6,10 @@ from telebot.states.sync.context import StateContext
 from common.kbds import (MAILING_BTN, admin_panel_btn, go_to_menu, go_back_or_mail, 
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
-from tg_bot.models import User
+from tg_bot.models import MediaGroupPost, User
 from tg_bot.services.group import get_group_field
 from tg_bot.utils import is_continue_btn, is_main_btn, is_sending_btn
-from tg_bot.services.admin import admin_confirm, is_admin
+from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
 
@@ -42,7 +42,6 @@ class GroupMailing(StatesGroup):
     language = State()
     course = State()
     post = State()
-    media_group_caption = State()
     sending = State()
 
 
@@ -156,21 +155,7 @@ def sending_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
 
     state.set(GroupMailing.sending)
-    
-    with state.data() as data:
-        post_data = data.get("post")
-        media_group_caption = data.get('media_group_caption')
-
-    for item in post_data:
-        if item['type'] == 'video':
-            bot.send_video(chat_id, video=item['video_id'], caption=item['caption'])
-
-        elif item['type'] == 'photo':
-            bot.send_photo(chat_id, photo=item['photo_id'], caption=item['caption'])
-        
-        elif item['type'] == 'group_photo':
-            group = [types.InputMediaPhoto(media=item['photo_id'], caption=media_group_caption) for i in post_data]
-            bot.send_media_group(chat_id, media=group)
+    posts_mailing(state, message)
 
     state.delete()
     admin_start_panel(message)

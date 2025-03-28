@@ -52,3 +52,28 @@ class Group(models.Model):
     class Meta:
         verbose_name = 'Группу'
         verbose_name_plural = 'Группы'
+
+
+class MediaGroupPost(models.Model):
+    media_group_id = models.BigIntegerField(verbose_name='Ид медиа группы')
+    caption = models.TextField(verbose_name='Текст поста')
+    media_file_type = models.CharField(verbose_name='Тип медиа', max_length=150)
+
+    def __str__(self):
+        return f'Пост медиа-группа {self.pk}'
+    
+    class Meta:
+        verbose_name = 'Пост медиа-группу'
+        verbose_name_plural = 'Пост медиа-группы'
+
+
+class MediaGroupFile(models.Model):
+    media_group = models.ForeignKey(MediaGroupPost, on_delete=models.CASCADE, related_name='files')
+    media_id = models.TextField(verbose_name='Ид медиа файла')
+
+    def __str__(self):
+        return f'Файл медиа-группы {self.media_group.pk}'
+    
+    class Meta:
+        verbose_name = 'Файл медиа-группы'
+        verbose_name_plural = 'Файлы медиа-групп'

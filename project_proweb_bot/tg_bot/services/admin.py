@@ -1,6 +1,7 @@
 
 # подтверждение админа пользователя
-from tg_bot.models import UserAdmin
+from telebot import types
+from tg_bot.models import MediaGroupFile, MediaGroupPost, UserAdmin
 
 
 def admin_confirm(tg_id):
@@ -50,29 +51,87 @@ def add_post_to_state(state, message):
             bot.send_message(chat_id, 'Отправьте хотябы один пост для рассылки')
 
     elif message.media_group_id:
+        with state.data() as data:
+            post_data = data.get("post")
+            media_group_caption = data.get('media_group_caption')
+        
         if message.video:
-            video_or_photo = {'type':'group_video', 'video_id': message.video.file_id}
+            media_id = message.video.file_id
+            media_file_type = 'video'
+
 
         elif message.photo:
-            video_or_photo = {'type':'group_photo', 'photo_id': message.photo[-1].file_id}
+            media_id = message.photo[-1].file_id
+            media_file_type = 'photo'
         
         if message.caption:
             caption = message.caption
         
+        media_group_post = MediaGroupPost.objects.filter(media_group_id=message.media_group_id).first()
+
+        if media_group_post:
+            media_group_file = MediaGroupFile.objects.create(media_group=media_group_post, media_id=media_id)
+
+        else:
+            media_group_post = MediaGroupPost.objects.create(media_group_id=message.media_group_id,
+                                                             caption=caption, media_file_type=media_file_type)
+            
+            media_group_file = MediaGroupFile.objects.create(media_group=media_group_post, media_id=media_id)
+
+
         with state.data() as data:
             post_data = data.get("post")
-            media_group_caption = data.get('media_group_caption')
+            if not post_data:
+                post_data = []
 
-        if not media_group_caption:
-            state.add_data(media_group_caption=caption)
-        if not post_data:
-            post_data = []
-
-        if video_or_photo not in post_data:
-            post_data.append(video_or_photo)
+        if message.media_group_id not in post_data:
+            post_data.append(message.media_group_id)
             state.add_data(post=post_data)
-        else:
-            post_data.remove(video_or_photo)
 
-        if len(post_data) > 1:
-            bot.send_message(chat_id, f'Пост готов, нажмите <b>"{MAILING_BTN}"</b>', reply_markup=go_back_or_mail())
+        bot.send_message(chat_id, f'Пост готов, нажмите <b>"{MAILING_BTN}"</b>', reply_markup=go_back_or_mail())
+
+# отправка постов
+def posts_mailing(state, message):
+    chat_id = message.chat.id
+
+    with state.data() as data:
+        post_data = data.get("post")
+        media_group_caption = data.get('media_group_caption')
+
+    media_group_posts = []
+
+    for item in post_data:
+        if type(item) is dict:
+            if item['type'] == 'video':
+                bot.send_video(chat_id, video=item['video_id'], caption=item['caption'])
+
+            elif item['type'] == 'photo':
+                bot.send_photo(chat_id, photo=item['photo_id'], caption=item['caption'])
+        else:
+            media_group_post = MediaGroupPost.objects.get(media_group_id=item)
+            if media_group_post not in media_group_posts:
+                media_group_posts.append(media_group_post)
+
+
+    if len(media_group_posts) >= 1:
+        for post in media_group_posts:
+            caption = post.caption
+            post_files = post.files.all()
+
+            group = []
+
+            for post_file in post_files:
+                if post.media_file_type == 'photo':
+                    if post_file == post_files[0]:
+                        group.append(types.InputMediaPhoto(post_file.media_id, caption=caption))
+                    else:
+                        group.append(types.InputMediaPhoto(post_file.media_id))
+                
+                if post.media_file_type == 'video':
+                    if post_file == post_files[0]:
+                        group.append(types.InputMediaVideo(post_file.media_id, caption=caption))
+                    else:
+                        group.append(types.InputMediaVideo(post_file.media_id))
+                
+
+            bot.send_media_group(chat_id, media=group)
