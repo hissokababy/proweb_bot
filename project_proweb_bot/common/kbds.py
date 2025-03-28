@@ -33,19 +33,27 @@ def main_btns_reply(lang, level, row=2):
     return markup
 
 
+
+PRIVATE_MAILING_BTN = 'Рассылка в личные чаты пользователей'
+GROUP_MAILING_BTN = 'Рассылка в группы студентов'
+
 def admin_panel_btn():
    markup = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-   btn = KeyboardButton(text='Рассылка в личные чаты пользователей')
-   btn1 = KeyboardButton(text='Рассылка в группы студентов')
+   btn = KeyboardButton(text=PRIVATE_MAILING_BTN)
+   btn1 = KeyboardButton(text=GROUP_MAILING_BTN)
    return markup.add(btn, btn1)
 
 
 CONTINUE_BTN = 'Далее'
 BACK_TO_MENU_BTN = 'Главное меню ↩️'
+ALL_LANGUAGES = 'Все языки'
+ALL_COURSES = 'Все курсы'
+MAILING_BTN = 'Рассылать'
+
 
 def mailing_languages(LANGUAGES):
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-   btn = KeyboardButton(text="Все языки")
+   btn = KeyboardButton(text=ALL_LANGUAGES)
 
    langs = [KeyboardButton(text=i) for i in LANGUAGES]
 
@@ -59,7 +67,7 @@ def mailing_languages(LANGUAGES):
 
 def mailing_courses(COURSES):
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-   btn = KeyboardButton(text="Все курсы")
+   btn = KeyboardButton(text=ALL_COURSES)
    courses = [KeyboardButton(text=i) for i in COURSES]
 
    btn4 = KeyboardButton(text=BACK_TO_MENU_BTN)
@@ -79,7 +87,6 @@ def go_to_menu():
    markup.add(btn)
    return markup
 
-MAILING_BTN = 'Рассылать'
 
 def go_back_or_mail():
    markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)

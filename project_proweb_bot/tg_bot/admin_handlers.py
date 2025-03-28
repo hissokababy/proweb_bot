@@ -3,12 +3,11 @@ from telebot import types
 from telebot.states import State, StatesGroup
 from telebot.states.sync.context import StateContext
 
-from common.kbds import (MAILING_BTN, admin_panel_btn, go_to_menu, go_back_or_mail, 
+from common.kbds import (admin_panel_btn, go_to_menu, go_back_or_mail, 
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
-from tg_bot.models import MediaGroupPost, User
 from tg_bot.services.group import get_group_field
-from tg_bot.utils import is_continue_btn, is_main_btn, is_sending_btn
+from tg_bot.utils import is_continue_btn, is_group_mailing_btn, is_main_btn, is_private_mailing_btn, is_sending_btn
 from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
@@ -45,13 +44,24 @@ class GroupMailing(StatesGroup):
     sending = State()
 
 
-@bot.message_handler(func=lambda message: message.text == 'Рассылка в группы студентов')
+# расслыка по группам
+@bot.message_handler(func=lambda message: is_group_mailing_btn(message.text))
 def group_mailing(message: types.Message, state: StateContext):
     chat_id = message.chat.id
-    state.set(GroupMailing.language)
     
     if is_admin(chat_id):
+        state.set(GroupMailing.language)
         bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages(get_group_field(language=True)))
+    
+
+# расслыка по личным чатам
+@bot.message_handler(func=lambda message: is_private_mailing_btn(message.text))
+def group_mailing(message: types.Message, state: StateContext):
+    chat_id = message.chat.id
+    
+    if is_admin(chat_id):
+        state.set(GroupMailing.language)
+        bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_field(language=True)))
     
 
 # обраюотчик кнопка главное меню 

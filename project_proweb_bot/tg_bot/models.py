@@ -47,7 +47,7 @@ class Group(models.Model):
     is_in_group = models.BooleanField(default=False, verbose_name='В группе')
 
     def __str__(self):
-        return f'{self.pk} {self.course} {self.language} {self.days} {self.time}'
+        return f'{self.pk} {self.course} {self.language} {self.days} {self.time}, В группе: {self.is_in_group}'
     
     class Meta:
         verbose_name = 'Группу'

@@ -24,6 +24,7 @@ def add_bot_group(group):
 
 # обработка удаления бота из группы
 def left_bot_group(tg_group_id):
+    
     group = Group.objects.get(tg_id=tg_group_id)
     group.is_in_group = False
     group.save()
@@ -32,7 +33,7 @@ def left_bot_group(tg_group_id):
 # получение всех языков/курсов групп
 def get_group_field(language=None, course=None):
     all = []
-    for i in Group.objects.all():
+    for i in Group.objects.filter(is_in_group=True):
         if language:
             if i.language not in all:
                 all.append(i.language)
@@ -41,3 +42,14 @@ def get_group_field(language=None, course=None):
                 all.append(i.course)
     return all
 
+# # получение всех языков пользователей
+# def get_users_languages():
+#     all = []
+#     for i in Group.objects.filter(is_in_group=True):
+#         if language:
+#             if i.language not in all:
+#                 all.append(i.language)
+#         elif course:
+#             if i.course not in all:
+#                 all.append(i.course)
+#     return all
