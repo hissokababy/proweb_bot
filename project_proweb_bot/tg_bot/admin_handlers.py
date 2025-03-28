@@ -195,5 +195,3 @@ from tg_bot.services.admin import add_post_to_state
 def post_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     add_post_to_state(state, message)
-
-

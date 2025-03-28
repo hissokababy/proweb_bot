@@ -44,7 +44,7 @@ class Group(models.Model):
     language = models.CharField(max_length=150, verbose_name='Язык группы')
     days = models.CharField(max_length=150, verbose_name='Дни обучения группы')
     time = models.CharField(max_length=150, verbose_name='Время обучения группы')
-    is_in_group = models.BooleanField(default=False, verbose_name='В группе')
+    is_in_group = models.BooleanField(default=False, verbose_name='Бот в группе')
 
     def __str__(self):
         return f'{self.pk} {self.course} {self.language} {self.days} {self.time}, В группе: {self.is_in_group}'
@@ -54,21 +54,35 @@ class Group(models.Model):
         verbose_name_plural = 'Группы'
 
 
-class MediaGroupPost(models.Model):
-    media_group_id = models.BigIntegerField(verbose_name='Ид медиа группы')
+
+class Post(models.Model):
     caption = models.TextField(verbose_name='Текст поста')
-    media_file_type = models.CharField(verbose_name='Тип медиа', max_length=150)
+    type = models.CharField(max_length=150, verbose_name='Тип поста', null=True)
+    post_tg_id = models.BigIntegerField(verbose_name='Тг ид поста')
+    media_group_id = models.BigIntegerField(verbose_name='Ид медиа группы', blank=True, null=True)
 
     def __str__(self):
-        return f'Пост медиа-группа {self.pk}'
-    
-    class Meta:
-        verbose_name = 'Пост медиа-группу'
-        verbose_name_plural = 'Пост медиа-группы'
+        return f'Пост {self.pk}'
 
+    class Meta:
+        verbose_name = 'Пост'
+        verbose_name_plural = 'Посты'
+
+
+class PostEntities(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='entities', verbose_name='Форматирование текста поста')
+    type = models.CharField(max_length=150, blank=True, null=True)
+    offset = models.IntegerField(blank=True, null=True)
+    length = models.IntegerField(blank=True, null=True)
+    url = models.CharField(max_length=450, blank=True, null=True)
+    user = models.CharField(max_length=150, blank=True, null=True)
+    language = models.CharField(max_length=150, blank=True, null=True)
+    custom_emoji_id = models.CharField(max_length=450, blank=True, null=True)
+    
 
 class MediaGroupFile(models.Model):
-    media_group = models.ForeignKey(MediaGroupPost, on_delete=models.CASCADE, related_name='files')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='files')
+    media_type = models.CharField(verbose_name='Тип медиа', max_length=150)
     media_id = models.TextField(verbose_name='Ид медиа файла')
 
     def __str__(self):

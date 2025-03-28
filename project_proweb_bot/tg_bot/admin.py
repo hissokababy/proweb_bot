@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from tg_bot.models import Group, User, UserAdmin, MediaGroupPost, MediaGroupFile
+from tg_bot.models import Group, User, UserAdmin, Post, MediaGroupFile
 
 # Register your models here.
 
@@ -9,7 +9,7 @@ admin.site.register(Group)
 
 
 class MediaGroupFileInline(admin.TabularInline):
-    fk_name = 'media_group'
+    fk_name = 'post'
     model = MediaGroupFile
     extra = 1
 
@@ -19,7 +19,7 @@ class UserAdminAdmin(admin.ModelAdmin):
     list_display = ['user', 'get_confirm']
 
 
-@admin.register(MediaGroupPost)
+@admin.register(Post)
 class MediaGroupPostAdmin(admin.ModelAdmin):
-    list_display = ['id',]
+    list_display = ['id', 'type']
     inlines = [MediaGroupFileInline,]

@@ -17,7 +17,8 @@ def telegram_bot(request):
     update = telebot.types.Update.de_json(json_string)
     bot.process_new_updates([update])
 
-
+    # print(*update.message.entities)
+    # bot.send_message(update.message.chat.id, 'aodjaoidj', entities=[])
     return HttpResponse('ok')
 
   else:
