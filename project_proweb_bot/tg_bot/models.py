@@ -56,37 +56,27 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    caption = models.TextField(verbose_name='Текст поста')
+    caption = models.TextField(verbose_name='Текст поста', blank=True, null=True)
     type = models.CharField(max_length=150, verbose_name='Тип поста', null=True)
-    post_tg_id = models.BigIntegerField(verbose_name='Тг ид поста')
+    post_tg_id = models.CharField(max_length=455, verbose_name='Тг ид поста')
+    media_id = models.CharField(max_length=455, verbose_name='Тг ид медиа файла', null=True, blank=True)
     media_group_id = models.BigIntegerField(verbose_name='Ид медиа группы', blank=True, null=True)
 
     def __str__(self):
-        return f'Пост {self.pk}'
+        return f'Пост {self.pk}, Тип {self.type}'
 
     class Meta:
         verbose_name = 'Пост'
         verbose_name_plural = 'Посты'
 
 
-class PostEntities(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='entities', verbose_name='Форматирование текста поста')
-    type = models.CharField(max_length=150, blank=True, null=True)
-    offset = models.IntegerField(blank=True, null=True)
-    length = models.IntegerField(blank=True, null=True)
-    url = models.CharField(max_length=450, blank=True, null=True)
-    user = models.CharField(max_length=150, blank=True, null=True)
-    language = models.CharField(max_length=150, blank=True, null=True)
-    custom_emoji_id = models.CharField(max_length=450, blank=True, null=True)
-    
-
 class MediaGroupFile(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='files')
-    media_type = models.CharField(verbose_name='Тип медиа', max_length=150)
+    type = models.CharField(verbose_name='Тип медиа', max_length=150, blank=True, null=True)
     media_id = models.TextField(verbose_name='Ид медиа файла')
 
     def __str__(self):
-        return f'Файл медиа-группы {self.media_group.pk}'
+        return f'Файл медиа-группы {self.media_type}'
     
     class Meta:
         verbose_name = 'Файл медиа-группы'

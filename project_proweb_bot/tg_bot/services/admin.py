@@ -1,9 +1,12 @@
 
 # подтверждение админа пользователя
 from telebot import types
+from tg_bot.utils import get_media_file_group, mailing_to_receivers
 from tg_bot.services.group import get_group_or_user_field
-from tg_bot.models import Group, MediaGroupFile, Post, PostEntities, User, UserAdmin
+from tg_bot.models import Group, MediaGroupFile, Post, User, UserAdmin
 
+from tg_bot.bot import bot
+from common.kbds import ALL_COURSES, ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, MAILING_BTN, go_back_or_mail
 
 def admin_confirm(tg_id):
     user_admin = UserAdmin.objects.get(user__tg_id=tg_id)
@@ -20,8 +23,6 @@ def is_admin(tg_id):
         return True
     
 
-from tg_bot.bot import bot
-from common.kbds import ALL_COURSES, ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, MAILING_BTN, go_back_or_mail
 
 # функция добавления поста в состояние post
 def add_post_to_state(state, message):
@@ -33,100 +34,75 @@ def add_post_to_state(state, message):
             post_data = []
 
     if not message.media_group_id:
+        post_tg_id = message.id
+
         if message.text:
             media_id = message.id
-            media_data = message.text
             media_type = 'text'
+            media_data = message.html_text
 
-        post = Post.objects.create(caption=media_data, post_tg_id=media_id, type=media_type)
+        elif message.video:
+            media_id = message.video.file_id
+            media_type = 'video'
+            media_data = None
+            if message.html_caption:
+                media_data = message.html_caption
 
-        if message.entities:
-            entities = message.entities
-            for entity in entities:
-                post_entity = PostEntities.objects.create(post=post, type=entity.type, offset=entity.offset,
-                                                length=entity.length, url=entity.url, user=entity.user,
-                                                language=entity.language, custom_emoji_id=entity.custom_emoji_id)
+        elif message.photo:
+            media_id = message.photo[-1].file_id
+            media_type = 'photo'
+            media_data = None
+            if message.html_caption:
+                media_data = message.html_caption
+        
+        elif message.document:
+            media_id = message.document.file_id
+            media_type = 'document'
+            media_data = None
+            if message.html_caption:
+                media_data = message.html_caption
 
+        post = Post.objects.create(caption=media_data, media_id=media_id, post_tg_id=post_tg_id, type=media_type)
 
-    if media_id not in post_data:
-        post_data.append(media_id)
-        state.add_data(post=post_data)
-    else:
-        post_data.remove(media_id)
+        # добавление или удаление ид сообщения в состояние post
+        if media_id not in post_data:
+            post_data.append(post_tg_id)
+            state.add_data(post=post_data)
+        else:
+            post_data.remove(media_id)
+
+    elif message.media_group_id:
+        media_group_id = message.media_group_id
+        type = 'media'
+        if message.html_caption:
+            caption = message.html_caption
+
+        # добавление или удаление ид медиа группы в состояние post
+        if media_group_id not in post_data:
+            post_data.append(media_group_id)
+            state.add_data(post=post_data)
+
+        post = Post.objects.filter(type=type, media_group_id=media_group_id).first()
+        
+        if not post:            
+            post = Post.objects.create(type=type, media_group_id=media_group_id, caption=caption)
+
+        if message.video:
+            media_type = 'video'
+            media_id = message.video.file_id
+
+        elif message.photo:
+            media_type = 'photo'
+            media_id = message.photo[-1].file_id
+
+        elif message.document:
+            media_type = 'document'
+            media_id = message.document.file_id
+
+        post_file = MediaGroupFile.objects.create(post=post, media_id=media_id, type=media_type)
 
     if len(post_data) >= 1:
         bot.send_message(chat_id, 'Пост готов, нажмите <b>"Рассылать"</b>', reply_markup=go_back_or_mail())
-
-    else:
-        bot.send_message(chat_id, 'Отправьте хотябы один пост для рассылки')
-
-
-
-        # if message.video and message.caption:
-        #     video_or_photo = {'type':'video', 'video_id': message.video.file_id, 'caption': message.caption}
-
-        # elif message.photo and message.caption:
-        #     video_or_photo = {'type':'photo', 'photo_id': message.photo[-1].file_id, 'caption': message.caption}
-
-        # elif message.text:
-        #     video_or_photo = {'type':'text', 'text': message.text}
-
-        # with state.data() as data:
-        #     post_data = data.get("post")
-        #     if not post_data:
-        #         post_data = []
-            
-        # if video_or_photo not in post_data:
-        #     post_data.append(video_or_photo)
-        #     state.add_data(post=post_data)
-        # else:
-        #     post_data.remove(video_or_photo)
-
-        # if len(post_data) >= 1:
-        #     bot.send_message(chat_id, 'Пост готов, нажмите <b>"Рассылать"</b>', reply_markup=go_back_or_mail())
-
-        # else:
-        #     bot.send_message(chat_id, 'Отправьте хотябы один пост для рассылки')
-
-    # elif message.media_group_id:
-    #     with state.data() as data:
-    #         post_data = data.get("post")
-    #         media_group_caption = data.get('media_group_caption')
-        
-    #     if message.video:
-    #         media_id = message.video.file_id
-    #         media_file_type = 'video'
-
-
-    #     elif message.photo:
-    #         media_id = message.photo[-1].file_id
-    #         media_file_type = 'photo'
-        
-    #     if message.caption:
-    #         caption = message.caption
-        
-    #     media_group_post = Post.objects.filter(media_group_id=message.media_group_id).first()
-
-    #     if media_group_post:
-    #         media_group_file = MediaGroupFile.objects.create(media_group=media_group_post, media_id=media_id)
-
-    #     else:
-    #         media_group_post = Post.objects.create(media_group_id=message.media_group_id,
-    #                                                          caption=caption, media_file_type=media_file_type)
-            
-    #         media_group_file = MediaGroupFile.objects.create(media_group=media_group_post, media_id=media_id)
-
-
-    #     with state.data() as data:
-    #         post_data = data.get("post")
-    #         if not post_data:
-    #             post_data = []
-
-    #     if message.media_group_id not in post_data:
-    #         post_data.append(message.media_group_id)
-    #         state.add_data(post=post_data)
-
-    #     bot.send_message(chat_id, f'Пост готов, нажмите <b>"{MAILING_BTN}"</b>', reply_markup=go_back_or_mail())
 
 
 # отправка постов
@@ -144,21 +120,8 @@ def posts_mailing(state, message):
     
     users = User.objects.all()
 
-    for user in users:
-        for item in post_data:
-            post = Post.objects.get(post_tg_id=item)
-
-            entities = []
-            for i in post.entities.all():
-
-                entity = types.MessageEntity(type=i.type, offset=i.offset, length=i.length,
-                                             url=i.url)
-                entities.append(entity)
-            print(entities)
-            bot.send_message(user.tg_id, post.caption, entities=entities)
-
-
-
+    mailing_to_receivers(post_data, users)
+    bot.send_message(chat_id, 'Рассылка выполнена успешно')
 
     # if language == ALL_USERS_LANGUAGES:
     #     users = User.objects.all()

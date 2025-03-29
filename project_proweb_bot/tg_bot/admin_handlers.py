@@ -12,7 +12,12 @@ from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
 
+# @bot.message_handler(content_types=['text', 'video', 'photo', 'document', 'voice', 'audio', 'poll'])
+# def start(message: types.Message):
 
+#     # bot.send_photo(message.chat.id, caption=message.html_caption, photo=message.photo[-1].file_id)
+#     print(message.html_caption)
+#     print(message)
 
 @bot.message_handler(commands=['start'])
 def admin_start_panel(message: types.Message):
@@ -191,7 +196,7 @@ def sending_state(message: types.Message, state: StateContext):
 
 from tg_bot.services.admin import add_post_to_state
 
-@bot.message_handler(state=GroupMailing.post, content_types=['text', 'photo', 'video']) 
+@bot.message_handler(state=GroupMailing.post, content_types=['text', 'photo', 'video', 'document', 'voice', 'audio']) 
 def post_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     add_post_to_state(state, message)
