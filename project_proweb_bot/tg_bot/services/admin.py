@@ -75,6 +75,7 @@ def add_post_to_state(state, message):
             post_data.remove(media_id)
 
     elif message.media_group_id:
+        post_tg_id = message.id
         media_group_id = message.media_group_id
         type = 'media'
         if message.html_caption:
@@ -88,7 +89,7 @@ def add_post_to_state(state, message):
         post = Post.objects.filter(type=type, media_group_id=media_group_id).first()
         
         if not post:            
-            post = Post.objects.create(type=type, media_group_id=media_group_id, caption=caption)
+            post = Post.objects.create(type=type, media_group_id=media_group_id, caption=caption, post_tg_id=message.id)
 
         if message.video:
             media_type = 'video'
@@ -140,6 +141,17 @@ def posts_mailing(state, message):
     else:
         receivers = Group.objects.filter(language__in=language, course__in=course, is_in_group=True)
 
+    if type(language) is list:
+        language = ', '.join(language)
+    if type(course) is list:
+        course = ', '.join(course)
+
+    report = {
+        'language': language,
+        'course': course,
+        'receivers': receivers.count(),
+    }
+
     mailing_to_receivers(post_data, receivers, chat_id)
-    bot.send_message(chat_id, 'Рассылка выполнена успешно')
+    bot.send_message(chat_id, f"Рассылка выполнена успешно✅\n\nЯзыки: <b>{report['language']}</b>\nКурсы: <b>{report['course']}</b>\nПолучатели: <b>{report['receivers']}</b>")
 

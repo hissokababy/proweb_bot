@@ -102,6 +102,17 @@ def go_back_or_mail():
    markup.add(btn)
    return markup
 
+PIN_BTN = 'Закрепить пост'
+DELETE_BTN = 'Удалить пост'
+
+def pin_or_delete_btns(msg_id, receivers_tg_ids):
+   markup = InlineKeyboardMarkup(row_width=2)
+   btn = InlineKeyboardButton(text=PIN_BTN, callback_data=f'post_pin_{msg_id}_{receivers_tg_ids}')
+   btn1 = InlineKeyboardButton(text=DELETE_BTN, callback_data=f'post_delete_{msg_id}_{receivers_tg_ids}')
+   
+   markup.add(btn, btn1)
+   return markup
+
 
 
 

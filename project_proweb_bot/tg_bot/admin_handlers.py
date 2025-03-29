@@ -11,13 +11,8 @@ from tg_bot.utils import is_continue_btn, is_group_mailing_btn, is_main_btn, is_
 from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
+from tg_bot.services.admin import add_post_to_state
 
-# @bot.message_handler(content_types=['text', 'video', 'photo', 'document', 'voice', 'audio', 'poll'])
-# def start(message: types.Message):
-
-#     # bot.send_photo(message.chat.id, caption=message.html_caption, photo=message.photo[-1].file_id)
-#     print(message.html_caption)
-#     print(message)
 
 @bot.message_handler(commands=['start'])
 def admin_start_panel(message: types.Message):
@@ -41,6 +36,25 @@ def admin_panel(call: types.CallbackQuery):
     admin_confirm(chat_id)
     admin_start_panel(call.message)
 
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('post_'))
+def handle_post(call: types.CallbackQuery):
+    chat_id = call.message.chat.id
+
+    _, action, msg_id, receivers_ids  = call.data.split('_')
+
+    old_ids = receivers_ids.replace('[', '').replace(']', '')
+    ids_filtered = old_ids.replace(' ', '').split(',')
+
+    # print(action)
+    # print(ids_filtered)
+    # print(type(msg_id), msg_id)    
+    # if action == 'pin':
+    #     for id in ids_filtered:
+    #         bot.pin_chat_message(id, message_id=int(msg_id))
+
+    
 
 class GroupMailing(StatesGroup):
     language = State()
@@ -194,9 +208,9 @@ def sending_state(message: types.Message, state: StateContext):
     admin_start_panel(message)
 
 
-from tg_bot.services.admin import add_post_to_state
 
 @bot.message_handler(state=GroupMailing.post, content_types=['text', 'photo', 'video', 'document', 'voice', 'audio']) 
 def post_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     add_post_to_state(state, message)
+

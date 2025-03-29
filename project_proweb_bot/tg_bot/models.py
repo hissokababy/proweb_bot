@@ -61,6 +61,7 @@ class Post(models.Model):
     post_tg_id = models.CharField(max_length=455, verbose_name='Тг ид поста')
     media_id = models.CharField(max_length=455, verbose_name='Тг ид медиа файла', null=True, blank=True)
     media_group_id = models.BigIntegerField(verbose_name='Ид медиа группы', blank=True, null=True)
+    sent_to_owner = models.BooleanField(default=False, verbose_name='Отправлен отправителю')
 
     def __str__(self):
         return f'Пост {self.pk}, Тип {self.type}'
