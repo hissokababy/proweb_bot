@@ -52,7 +52,7 @@ def get_media_file_group(post):
 
 
 # рассылка постов пользователям или группам
-def mailing_to_receivers(post_data, receivers):
+def mailing_to_receivers(post_data, receivers, chat_id):
     for receiver in receivers:
         for post_tg_id in post_data:
             post = Post.objects.filter(post_tg_id=post_tg_id) | Post.objects.filter(media_group_id=post_tg_id)
@@ -62,6 +62,7 @@ def mailing_to_receivers(post_data, receivers):
                 bot.send_message(receiver.tg_id, post.caption)
             elif post.type == 'photo':
                 bot.send_photo(receiver.tg_id, photo=post.media_id, caption=post.caption)
+
             elif post.type == 'video':
                 bot.send_video(receiver.tg_id, video=post.media_id, caption=post.caption)
             elif post.type == 'document':

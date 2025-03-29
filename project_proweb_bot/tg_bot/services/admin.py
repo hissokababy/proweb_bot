@@ -44,23 +44,26 @@ def add_post_to_state(state, message):
         elif message.video:
             media_id = message.video.file_id
             media_type = 'video'
-            media_data = None
-            if message.html_caption:
-                media_data = message.html_caption
+            media_data = message.html_caption
+
 
         elif message.photo:
             media_id = message.photo[-1].file_id
             media_type = 'photo'
-            media_data = None
-            if message.html_caption:
-                media_data = message.html_caption
+            media_data = message.html_caption
+
         
         elif message.document:
             media_id = message.document.file_id
             media_type = 'document'
-            media_data = None
-            if message.html_caption:
-                media_data = message.html_caption
+            media_data = message.html_caption
+
+        
+        elif message.audio:
+            media_id = message.audio.file_id
+            media_type = 'audio'
+            media_data = message.html_caption
+
 
         post = Post.objects.create(caption=media_data, media_id=media_id, post_tg_id=post_tg_id, type=media_type)
 
@@ -109,8 +112,8 @@ def add_post_to_state(state, message):
 def posts_mailing(state, message):
     chat_id = message.chat.id
 
-    groups = None
-    users = None
+    receivers = None
+
     users_langs = get_group_or_user_field(private=True)
 
     with state.data() as data:
@@ -118,119 +121,25 @@ def posts_mailing(state, message):
         course = data.get("course")
         post_data = data.get("post")
     
-    users = User.objects.all()
 
-    mailing_to_receivers(post_data, users)
+    if language == ALL_USERS_LANGUAGES:
+        receivers = User.objects.all()
+
+    elif language != ALL_USERS_LANGUAGES and language[0] in users_langs:
+        receivers = User.objects.filter(language_selected__in=users_langs)
+
+    elif language == ALL_GROUP_LANGUAGES and course != ALL_COURSES:
+        receivers = Group.objects.filter(course__in=course, is_in_group=True)
+
+    elif course == ALL_COURSES and language != ALL_GROUP_LANGUAGES:
+        receivers = Group.objects.filter(language__in=language, is_in_group=True)
+
+    elif language == ALL_GROUP_LANGUAGES and course == ALL_COURSES:
+        receivers = Group.objects.filter(is_in_group=True)
+
+    else:
+        receivers = Group.objects.filter(language__in=language, course__in=course, is_in_group=True)
+
+    mailing_to_receivers(post_data, receivers, chat_id)
     bot.send_message(chat_id, 'Рассылка выполнена успешно')
 
-    # if language == ALL_USERS_LANGUAGES:
-    #     users = User.objects.all()
-    
-    # elif language != ALL_USERS_LANGUAGES and language[0] in users_langs:
-    #     users = User.objects.filter(language_selected__in=users_langs)
-
-    # elif language == ALL_GROUP_LANGUAGES and course != ALL_COURSES:
-    #     groups = Group.objects.filter(course__in=course, is_in_group=True)
-
-    # elif course == ALL_COURSES and language != ALL_GROUP_LANGUAGES:
-    #     groups = Group.objects.filter(language__in=language, is_in_group=True)
-
-    # elif language == ALL_GROUP_LANGUAGES and course == ALL_COURSES:
-    #     groups = Group.objects.filter(is_in_group=True)
-
-    # else:
-    #     groups = Group.objects.filter(language__in=language, course__in=course, is_in_group=True)
-
-    # media_group_posts = []
-
-    # if groups:
-    #     for group in groups:
-    #         if group.is_in_group:
-    #             for item in post_data:
-    #                 if type(item) is str and not item.isdigit():
-    #                     bot.send_message(group.tg_id, item)
-
-    #                 elif type(item) is dict:
-    #                     if item['type'] == 'video':
-    #                         bot.send_video(group.tg_id, video=item['video_id'], caption=item['caption'])
-
-    #                     elif item['type'] == 'photo':
-    #                         bot.send_photo(group.tg_id, photo=item['photo_id'], caption=item['caption'])
-
-    #                     elif item['type'] == 'text':
-    #                         bot.send_message(group.tg_id, item['text'])
-
-    #                 else:
-    #                     media_group_post = MediaGroupPost.objects.get(media_group_id=item)
-    #                     if media_group_post not in media_group_posts:
-    #                         media_group_posts.append(media_group_post)
-
-
-    #             if len(media_group_posts) >= 1:
-    #                 for post in media_group_posts:
-    #                     caption = post.caption
-    #                     post_files = post.files.all()
-
-    #                     group_media = []
-
-    #                     for post_file in post_files:
-    #                         if post.media_file_type == 'photo':
-    #                             if post_file == post_files[0]:
-    #                                 group_media.append(types.InputMediaPhoto(post_file.media_id, caption=caption))
-    #                             else:
-    #                                 group_media.append(types.InputMediaPhoto(post_file.media_id))
-                            
-    #                         if post.media_file_type == 'video':
-    #                             if post_file == post_files[0]:
-    #                                 group_media.append(types.InputMediaVideo(post_file.media_id, caption=caption))
-    #                             else:
-    #                                 group_media.append(types.InputMediaVideo(post_file.media_id))
-                            
-
-    #                     bot.send_media_group(chat_id=group.tg_id, media=group_media)
-    
-    # elif users:
-    #     for user in users:
-    #             for item in post_data:
-    #                 if type(item) is str and not item.isdigit():
-    #                     bot.send_message(user.tg_id, item)
-
-    #                 elif type(item) is dict:
-    #                     if item['type'] == 'video':
-    #                         bot.send_video(user.tg_id, video=item['video_id'], caption=item['caption'])
-
-    #                     elif item['type'] == 'photo':
-    #                         bot.send_photo(user.tg_id, photo=item['photo_id'], caption=item['caption'])
-
-    #                     elif item['type'] == 'text':
-    #                         bot.send_message(user.tg_id, item['text'])
-
-    #                 else:
-    #                     media_group_post = MediaGroupPost.objects.get(media_group_id=item)
-    #                     if media_group_post not in media_group_posts:
-    #                         media_group_posts.append(media_group_post)
-
-
-    #             if len(media_group_posts) >= 1:
-    #                 for post in media_group_posts:
-    #                     caption = post.caption
-    #                     post_files = post.files.all()
-
-    #                     group_media = []
-
-    #                     for post_file in post_files:
-    #                         if post.media_file_type == 'photo':
-    #                             if post_file == post_files[0]:
-    #                                 group_media.append(types.InputMediaPhoto(post_file.media_id, caption=caption))
-    #                             else:
-    #                                 group_media.append(types.InputMediaPhoto(post_file.media_id))
-                            
-    #                         if post.media_file_type == 'video':
-    #                             if post_file == post_files[0]:
-    #                                 group_media.append(types.InputMediaVideo(post_file.media_id, caption=caption))
-    #                             else:
-    #                                 group_media.append(types.InputMediaVideo(post_file.media_id))
-                            
-
-    #                     bot.send_media_group(chat_id=user.tg_id, media=group_media)
-    

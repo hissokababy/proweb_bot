@@ -76,7 +76,7 @@ class MediaGroupFile(models.Model):
     media_id = models.TextField(verbose_name='Ид медиа файла')
 
     def __str__(self):
-        return f'Файл медиа-группы {self.media_type}'
+        return f'Файл медиа-группы {self.type}'
     
     class Meta:
         verbose_name = 'Файл медиа-группы'
