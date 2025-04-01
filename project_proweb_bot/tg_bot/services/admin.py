@@ -24,12 +24,14 @@ def is_admin(tg_id):
     
 
 
+
 # функция добавления поста в состояние post
 def add_post_to_state(state, message):
     chat_id = message.chat.id
 
     with state.data() as data:
         post_data = data.get("post")
+        is_forwarding = data.get('forwarding')
         if not post_data:
             post_data = []
 
@@ -64,8 +66,10 @@ def add_post_to_state(state, message):
             media_type = 'audio'
             media_data = message.html_caption
 
-
-        post = Post.objects.create(caption=media_data, media_id=media_id, post_tg_id=post_tg_id, type=media_type)
+        if not is_forwarding:
+            post = Post.objects.create(caption=media_data, media_id=media_id, post_tg_id=post_tg_id, type=media_type)
+        else:
+            post = Post.objects.create(caption=media_data, media_id=media_id, post_tg_id=post_tg_id, type=media_type, is_forwarding=int(message.chat.id))
 
         # добавление или удаление ид сообщения в состояние post
         if media_id not in post_data:
@@ -108,7 +112,6 @@ def add_post_to_state(state, message):
     if len(post_data) >= 1:
         bot.send_message(chat_id, 'Пост готов, нажмите <b>"Рассылать"</b>', reply_markup=go_back_or_mail())
 
-
 # отправка постов
 def posts_mailing(state, message):
     chat_id = message.chat.id
@@ -121,6 +124,9 @@ def posts_mailing(state, message):
         language = data.get("language")
         course = data.get("course")
         post_data = data.get("post")
+    
+
+    print(post_data)
     
 
     if language == ALL_USERS_LANGUAGES:

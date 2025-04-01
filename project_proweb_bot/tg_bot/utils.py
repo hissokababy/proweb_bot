@@ -1,4 +1,4 @@
-from common.kbds import BACK_TO_MENU_BTN, CONTINUE_BTN, MAILING_BTN, GROUP_MAILING_BTN, PRIVATE_MAILING_BTN, pin_or_delete_btns
+from common.kbds import BACK_TO_MENU_BTN, CONTINUE_BTN, FORWARDING_BTN, MAILING_BTN, GROUP_MAILING_BTN, PRIVATE_MAILING_BTN, pin_or_delete_btns
 from telebot import types
 from tg_bot.bot import bot
 from tg_bot.models import Post
@@ -23,6 +23,10 @@ def is_group_mailing_btn(text):
 
 def is_private_mailing_btn(text):
     if text == PRIVATE_MAILING_BTN:
+        return True
+
+def is_forwarding_btn(text):
+    if text == FORWARDING_BTN:
         return True
 
 # получение медиа группы фалов
@@ -53,55 +57,54 @@ def get_media_file_group(post):
 # рассылка постов пользователям или группам
 def mailing_to_receivers(post_data, receivers, chat_id):
     receivers_tg_ids = [i.tg_id for i in receivers]
-
+    msg_ids = []
+    post = None
+    total_posts = len(post_data)
+    
     for receiver in receivers:
         for post_tg_id in post_data:
             post = Post.objects.filter(post_tg_id=post_tg_id) | Post.objects.filter(media_group_id=post_tg_id)
             post = post.first()
 
-            if post.type == 'text':
-                bot.send_message(receiver.tg_id, post.caption)
-                is_send_to_owner(post, chat_id, receivers_tg_ids)
+            if post.is_forwarding and post.type != 'media':
+                msg = bot.forward_message(receiver.tg_id, from_chat_id=post.is_forwarding, message_id=post.post_tg_id)
+                print(msg.id)
+            elif post.type == 'text':
+                msg = bot.send_message(receiver.tg_id, post.caption)
+
             elif post.type == 'photo':
-                bot.send_photo(receiver.tg_id, photo=post.media_id, caption=post.caption)
-                is_send_to_owner(post, chat_id, receivers_tg_ids)
+                msg = bot.send_photo(receiver.tg_id, photo=post.media_id, caption=post.caption)
 
             elif post.type == 'video':
-                bot.send_video(receiver.tg_id, video=post.media_id, caption=post.caption)
-                is_send_to_owner(post, chat_id, receivers_tg_ids)
+                msg = bot.send_video(receiver.tg_id, video=post.media_id, caption=post.caption)
 
             elif post.type == 'document':
-                bot.send_document(receiver.tg_id, document=post.media_id, caption=post.caption)
-                is_send_to_owner(post, chat_id, receivers_tg_ids)
-
+                msg = bot.send_document(receiver.tg_id, document=post.media_id, caption=post.caption)
 
             elif post.type == 'media':
-                bot.send_media_group(receiver.tg_id, media=get_media_file_group(post))
-                is_send_to_owner(post, chat_id, receivers_tg_ids)
-
+                msg = bot.send_media_group(receiver.tg_id, media=get_media_file_group(post))
+        
+            msg_ids.append(msg.id)
+    
+    is_send_to_owner(post, chat_id, receivers_tg_ids, msg_ids, total_posts)
 
 # отправлен ли пост отправителю
-def is_send_to_owner(post, chat_id, receivers_tg_ids):
-    if post.sent_to_owner == False:
-        post_id = post.post_tg_id
+def is_send_to_owner(post, chat_id, receivers_tg_ids, msg_ids, total_posts):
+    
+    print(msg_ids)
+    print(receivers_tg_ids)
 
-        # print(post_id)
-        # print(receivers_tg_ids)
+    for i in range(total_posts):
+        if post.type == 'text':
+            bot.send_message(chat_id, post.caption, reply_markup=pin_or_delete_btns(msg_ids=msg_ids, receivers_tg_ids=receivers_tg_ids))
 
-        # if post.type == 'text':
-        #     bot.send_message(chat_id, post.caption, reply_markup=pin_or_delete_btns(post_id, receivers_tg_ids))
+        elif post.type == 'photo':
+            bot.send_photo(chat_id, photo=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(msg_ids, receivers_tg_ids))
 
+        elif post.type == 'video':
+            bot.send_video(chat_id, video=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(msg_ids, receivers_tg_ids))
+        elif post.type == 'document':
+            bot.send_document(chat_id, document=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(msg_ids, receivers_tg_ids))
 
-        # elif post.type == 'photo':
-        #     bot.send_photo(chat_id, photo=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(post_id, receivers_tg_ids))
-
-        # elif post.type == 'video':
-        #     bot.send_video(chat_id, video=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(post_id, receivers_tg_ids))
-        # elif post.type == 'document':
-        #     bot.send_document(chat_id, document=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(post_id, receivers_tg_ids))
-
-        # elif post.type == 'media':
-        #     bot.send_media_group(chat_id, media=get_media_file_group(post), reply_markup=pin_or_delete_btns(post_id, receivers_tg_ids))    
-
-        post.sent_to_owner = True
-        post.save()
+        elif post.type == 'media':
+            bot.send_media_group(chat_id, media=get_media_file_group(post), reply_markup=pin_or_delete_btns(msg_ids, receivers_tg_ids))

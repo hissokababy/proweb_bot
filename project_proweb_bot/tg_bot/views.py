@@ -17,14 +17,6 @@ def telegram_bot(request):
     update = telebot.types.Update.de_json(json_string)
     bot.process_new_updates([update])
 
-    
-
-    print(update.message.chat.type)
-
-    # msg = update.message.id
-
-
-    # bot.delete_message(chat_id, 65)
     return HttpResponse('ok')
 
   else:

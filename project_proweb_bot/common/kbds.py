@@ -36,12 +36,14 @@ def main_btns_reply(lang, level, row=2):
 
 PRIVATE_MAILING_BTN = 'Рассылка в личные чаты пользователей'
 GROUP_MAILING_BTN = 'Рассылка в группы студентов'
+FORWARDING_BTN = 'Переслать сообщение'
 
 def admin_panel_btn():
    markup = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
    btn = KeyboardButton(text=PRIVATE_MAILING_BTN)
    btn1 = KeyboardButton(text=GROUP_MAILING_BTN)
-   return markup.add(btn, btn1)
+   btn2 = KeyboardButton(text=FORWARDING_BTN)
+   return markup.add(btn, btn1, btn2)
 
 
 CONTINUE_BTN = 'Далее'
@@ -105,10 +107,10 @@ def go_back_or_mail():
 PIN_BTN = 'Закрепить пост'
 DELETE_BTN = 'Удалить пост'
 
-def pin_or_delete_btns(msg_id, receivers_tg_ids):
+def pin_or_delete_btns(msg_ids, receivers_tg_ids):
    markup = InlineKeyboardMarkup(row_width=2)
-   btn = InlineKeyboardButton(text=PIN_BTN, callback_data=f'post_pin_{msg_id}_{receivers_tg_ids}')
-   btn1 = InlineKeyboardButton(text=DELETE_BTN, callback_data=f'post_delete_{msg_id}_{receivers_tg_ids}')
+   btn = InlineKeyboardButton(text=PIN_BTN, callback_data=f'post_pin_{msg_ids}_{receivers_tg_ids}')
+   btn1 = InlineKeyboardButton(text=DELETE_BTN, callback_data=f'post_delete_{msg_ids}_{receivers_tg_ids}')
    
    markup.add(btn, btn1)
    return markup

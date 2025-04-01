@@ -7,7 +7,7 @@ from common.kbds import (ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, admin_panel_b
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply)
 from common.texts import texts
 from tg_bot.services.group import get_group_or_user_field
-from tg_bot.utils import is_continue_btn, is_group_mailing_btn, is_main_btn, is_private_mailing_btn, is_sending_btn
+from tg_bot.utils import is_continue_btn, is_forwarding_btn, is_group_mailing_btn, is_main_btn, is_private_mailing_btn, is_sending_btn
 from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
@@ -41,19 +41,24 @@ def admin_panel(call: types.CallbackQuery):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('post_'))
 def handle_post(call: types.CallbackQuery):
     chat_id = call.message.chat.id
+    
+    _, action, msg_ids, receivers_ids  = call.data.split('_')
 
-    _, action, msg_id, receivers_ids  = call.data.split('_')
+    receivers_ids = receivers_ids.replace('[', '').replace(']', '').replace(' ', '').split(',')
 
-    old_ids = receivers_ids.replace('[', '').replace(']', '')
-    ids_filtered = old_ids.replace(' ', '').split(',')
+    msg_ids = msg_ids.replace('[', '').replace(']', '').replace(' ', '').split(',')
 
-    # print(action)
-    # print(ids_filtered)
-    # print(type(msg_id), msg_id)    
-    # if action == 'pin':
-    #     for id in ids_filtered:
-    #         bot.pin_chat_message(id, message_id=int(msg_id))
-
+    action_done = ''
+    
+    for receivers_id, msg_id in zip(receivers_ids, msg_ids):
+        if action == 'pin':
+            bot.pin_chat_message(chat_id=int(receivers_id), message_id=int(msg_id))
+            action_done = "Пост был закрплён"
+        elif action == 'delete':
+            bot.delete_message(chat_id=int(receivers_id), message_id=int(msg_id))
+            action_done = 'Пост был удалён'
+    if action_done:
+        bot.send_message(chat_id, action_done)
     
 
 class GroupMailing(StatesGroup):
@@ -61,6 +66,17 @@ class GroupMailing(StatesGroup):
     course = State()
     post = State()
     sending = State()
+
+
+# перессылка сообщений
+@bot.message_handler(func=lambda message: is_forwarding_btn(message.text))
+def forwarding_btn_handler(message: types.Message, state: StateContext):
+    chat_id = message.chat.id
+    
+    if is_admin(chat_id):
+        state.set(GroupMailing.language)
+        state.add_data(forwarding=True)
+        bot.send_message(chat_id, 'Выберите язык групп', reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
 
 
 # расслыка по группам
