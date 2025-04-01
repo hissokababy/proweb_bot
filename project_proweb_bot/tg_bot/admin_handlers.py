@@ -3,12 +3,12 @@ from telebot import types
 from telebot.states import State, StatesGroup
 from telebot.states.sync.context import StateContext
 
-from common.kbds import (ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, forwarding_type_btns, mailing_type_btns, confirm_delete, go_to_menu, go_back_or_mail, mail_or_forward, 
+from common.kbds import (ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, BACK_TO_MENU_BTN, CONTINUE_BTN, FORWARDING, GROUP_FORWARDING_BTN, GROUP_MAILING_BTN, MAILING, PRIVATE_FORWARDING_BTN, PRIVATE_MAILING_BTN, SEND_POST, forwarding_type_btns, mailing_type_btns, confirm_delete, go_to_menu, go_back_or_mail, mail_or_forward, 
                          mailing_courses, mailing_languages, main_btns_inline, main_btns_reply, pin_or_delete_btns, unpin_or_delete_btns)
 from common.texts import texts
 from tg_bot.models import Post
 from tg_bot.services.group import get_group_or_user_field
-from tg_bot.utils import is_continue_btn, is_forwarding_btn, is_group_forwarding_btn, is_group_mailing_btn, is_mailing_btn, is_main_btn, is_private_forwarding_btn, is_private_mailing_btn, is_send_post_btn, is_sending_btn
+from tg_bot.utils import is_btn
 from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
@@ -37,7 +37,7 @@ def admin_start_panel(message: types.Message):
       bot.send_message(chat_id, texts[user_lang]['welcome']['greeting'], reply_markup=main_btns_inline(user_lang, 'main'))
 
 # обраюотчик кнопка главное меню 
-@bot.message_handler(func=lambda message: is_main_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, BACK_TO_MENU_BTN))
 def main_menu_btn_handler(message: types.Message, state: StateContext):
     
     admin_start_panel(message)
@@ -52,13 +52,13 @@ def admin_panel(call: types.CallbackQuery):
     admin_start_panel(call.message)
 
 
-@bot.message_handler(func=lambda message: is_mailing_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, MAILING))
 def handle_mailing(message: types.Message):
     chat_id = message.chat.id
     bot.send_message(chat_id, 'Выберите тип чата', reply_markup=mailing_type_btns())
 
 
-@bot.message_handler(func=lambda message: is_forwarding_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, FORWARDING))
 def handle_forwarding(message: types.Message):
     chat_id = message.chat.id
     bot.send_message(chat_id, 'Выберите тип чата', reply_markup=forwarding_type_btns())
@@ -116,7 +116,7 @@ def confirm_delete_handler(call: types.CallbackQuery):
 
 
 # расслыка по группам
-@bot.message_handler(func=lambda message: is_group_mailing_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, GROUP_MAILING_BTN))
 def group_mailing(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
@@ -126,7 +126,7 @@ def group_mailing(message: types.Message, state: StateContext):
     
 
 # расслыка по личным чатам
-@bot.message_handler(func=lambda message: is_private_mailing_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, PRIVATE_MAILING_BTN))
 def private_mailing(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
@@ -136,7 +136,7 @@ def private_mailing(message: types.Message, state: StateContext):
     
 
 # перессылка по группам
-@bot.message_handler(func=lambda message: is_group_forwarding_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, GROUP_FORWARDING_BTN))
 def group_forwarding(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
@@ -147,7 +147,7 @@ def group_forwarding(message: types.Message, state: StateContext):
     
 
 # перессылка по личным чатам
-@bot.message_handler(func=lambda message: is_private_forwarding_btn(message.text))
+@bot.message_handler(func=lambda message: is_btn(message.text, PRIVATE_FORWARDING_BTN))
 def private_forwarding(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
@@ -159,7 +159,7 @@ def private_forwarding(message: types.Message, state: StateContext):
 
 # обраюотчик кнопка далее 
 @bot.message_handler(state=[GroupMailing.language, GroupMailing.course], 
-                     func=lambda message: is_continue_btn(message.text))
+                     func=lambda message: is_btn(message.text, CONTINUE_BTN))
 def continue_handler(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
@@ -268,7 +268,7 @@ def course_state(message: types.Message, state: StateContext):
 
 
 
-@bot.message_handler(state=[GroupMailing.post, GroupMailing.sending], func=lambda message: is_send_post_btn(message.text)) 
+@bot.message_handler(state=[GroupMailing.post, GroupMailing.sending], func=lambda message: is_btn(message.text, SEND_POST)) 
 def sending_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
 

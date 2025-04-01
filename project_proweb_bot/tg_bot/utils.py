@@ -1,49 +1,15 @@
-from common.kbds import BACK_TO_MENU_BTN, CONTINUE_BTN, FORWARDING, GROUP_FORWARDING_BTN, MAILING, MAILING_BTN, GROUP_MAILING_BTN, PRIVATE_FORWARDING_BTN, PRIVATE_MAILING_BTN, SEND_POST, mail_or_forward, pin_or_delete_btns
+from common.kbds import (BACK_TO_MENU_BTN, CONTINUE_BTN, FORWARDING, GROUP_FORWARDING_BTN, MAILING, MAILING_BTN, GROUP_MAILING_BTN, 
+                         PRIVATE_FORWARDING_BTN, PRIVATE_MAILING_BTN, SEND_POST, mail_or_forward, pin_or_delete_btns)
 from telebot import types
 from tg_bot.bot import bot
 from tg_bot.models import Post, PostInChat
 
-def is_continue_btn(text):
-    if text == CONTINUE_BTN:
-        return True
-    
-def is_mailing_btn(text):
-    if text == MAILING:
-        return True
-    
-def is_forwarding_btn(text):
-    if text == FORWARDING:
-        return True
+BTNS_LIST = [BACK_TO_MENU_BTN, CONTINUE_BTN, FORWARDING, GROUP_FORWARDING_BTN, MAILING, MAILING_BTN, GROUP_MAILING_BTN, 
+                        PRIVATE_FORWARDING_BTN, PRIVATE_MAILING_BTN, SEND_POST]
 
-    
-def is_send_post_btn(text):
-    if text == SEND_POST:
-        return True
-
-def is_main_btn(text):
-    if text == BACK_TO_MENU_BTN:
-        return True
-    
-def is_sending_btn(text):
-    if text == MAILING_BTN:
-        return True
-
-
-def is_group_mailing_btn(text):
-    if text == GROUP_MAILING_BTN:
-        return True
-
-def is_private_mailing_btn(text):
-    if text == PRIVATE_MAILING_BTN:
-        return True
-    
-def is_group_forwarding_btn(text):
-    if text == GROUP_FORWARDING_BTN:
-        return True
-
-def is_private_forwarding_btn(text):
-    if text == PRIVATE_FORWARDING_BTN:
-        return True
+def is_btn(text, btn):
+     if text in BTNS_LIST and text == btn:
+          return True
 
 
 # получение медиа группы фалов
