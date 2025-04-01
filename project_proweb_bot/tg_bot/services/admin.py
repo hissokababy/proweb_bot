@@ -6,7 +6,7 @@ from tg_bot.services.group import get_group_or_user_field
 from tg_bot.models import Group, MediaGroupFile, Post, User, UserAdmin
 
 from tg_bot.bot import bot
-from common.kbds import ALL_COURSES, ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, MAILING_BTN, go_back_or_mail
+from common.kbds import ALL_COURSES, ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, MAILING_BTN, go_back_or_mail, mail_or_forward
 
 def admin_confirm(tg_id):
     user_admin = UserAdmin.objects.get(user__tg_id=tg_id)
@@ -78,7 +78,11 @@ def add_post_to_state(state, message):
         else:
             post_data.remove(media_id)
 
-    elif message.media_group_id:
+    elif message.media_group_id and is_forwarding:
+        bot.send_message(chat_id, 'Медиа группу нельзя пересылать')
+
+
+    elif message.media_group_id and not is_forwarding:
         post_tg_id = message.id
         media_group_id = message.media_group_id
         type = 'media'
@@ -108,9 +112,10 @@ def add_post_to_state(state, message):
             media_id = message.document.file_id
 
         post_file = MediaGroupFile.objects.create(post=post, media_id=media_id, type=media_type)
-
+    
     if len(post_data) >= 1:
-        bot.send_message(chat_id, 'Пост готов, нажмите <b>"Рассылать"</b>', reply_markup=go_back_or_mail())
+        bot.send_message(chat_id, 'Пост готов, нажмите <b>"Отправить"</b>', reply_markup=go_back_or_mail())
+
 
 # отправка постов
 def posts_mailing(state, message):
@@ -124,10 +129,8 @@ def posts_mailing(state, message):
         language = data.get("language")
         course = data.get("course")
         post_data = data.get("post")
-    
-
-    print(post_data)
-    
+        forwarding = data.get('forwarding')
+        
 
     if language == ALL_USERS_LANGUAGES:
         receivers = User.objects.all()
@@ -159,5 +162,8 @@ def posts_mailing(state, message):
     }
 
     mailing_to_receivers(post_data, receivers, chat_id)
-    bot.send_message(chat_id, f"Рассылка выполнена успешно✅\n\nЯзыки: <b>{report['language']}</b>\nКурсы: <b>{report['course']}</b>\nПолучатели: <b>{report['receivers']}</b>")
+    if not forwarding:
+        bot.send_message(chat_id, f"Рассылка выполнена успешно✅\n\nЯзыки: <b>{report['language']}</b>\nКурсы: <b>{report['course']}</b>\nПолучатели: <b>{report['receivers']}</b>")
+    else:
+        bot.send_message(chat_id, f"Перессылка выполнена успешно✅\n\nЯзыки: <b>{report['language']}</b>\nКурсы: <b>{report['course']}</b>\nПолучатели: <b>{report['receivers']}</b>")
 

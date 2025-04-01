@@ -72,6 +72,19 @@ class Post(models.Model):
         verbose_name_plural = 'Посты'
 
 
+class PostInChat(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='chats', blank=True, null=True)
+    chat_tg_id = models.BigIntegerField(verbose_name='Тг ид группы в котором пост')
+    message_id = models.BigIntegerField(verbose_name='Тг ид поста', unique=True)
+
+    def __str__(self):
+        return f'Чат в котором пост {self.chat_tg_id}'
+    
+    class Meta:
+        verbose_name = 'Чат в котором пост'
+        verbose_name_plural = 'Чаты в котором посты'
+
+
 class MediaGroupFile(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='files')
     type = models.CharField(verbose_name='Тип медиа', max_length=150, blank=True, null=True)
