@@ -23,8 +23,6 @@ def is_admin(tg_id):
         return True
     
 
-
-
 # функция добавления поста в состояние post
 def add_post_to_state(state, message):
     chat_id = message.chat.id

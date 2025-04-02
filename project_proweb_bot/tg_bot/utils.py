@@ -41,46 +41,49 @@ def get_media_file_group(post):
 def mailing_to_receivers(post_data, receivers, chat_id):
     receivers_tg_ids = [i.tg_id for i in receivers]
     msg_ids = []
-    post = None
-    total_posts = len(post_data)
+    posts_sent = []
     
     for receiver in receivers:
         for post_tg_id in post_data:
             post = Post.objects.filter(post_tg_id=post_tg_id) | Post.objects.filter(media_group_id=post_tg_id)
             post = post.first()
 
+            posts_sent.append(post) if not post in posts_sent else ...
+
             if post.is_forwarding and post.type != 'media':
-                    msg = bot.forward_message(receiver.tg_id, from_chat_id=post.is_forwarding, message_id=post.post_tg_id)
+                msg = bot.forward_message(receiver.tg_id, from_chat_id=post.is_forwarding, message_id=post.post_tg_id)
 
             elif post.is_forwarding and post.type == 'media':
-                 bot.send_message(chat_id, 'Медиа группу нельзя переслать', reply_markup=mail_or_forward())
+                msg = bot.send_message(chat_id, 'Медиа группу нельзя переслать', reply_markup=mail_or_forward())
 
             elif post.type == 'text':
-                    msg = bot.send_message(receiver.tg_id, post.caption)
+                msg = bot.send_message(receiver.tg_id, post.caption)
 
             elif post.type == 'photo':
-                    msg = bot.send_photo(receiver.tg_id, photo=post.media_id, caption=post.caption)
+                msg = bot.send_photo(receiver.tg_id, photo=post.media_id, caption=post.caption)
 
             elif post.type == 'video':
-                    msg = bot.send_video(receiver.tg_id, video=post.media_id, caption=post.caption)
+                msg = bot.send_video(receiver.tg_id, video=post.media_id, caption=post.caption)
 
             elif post.type == 'document':
-                    msg = bot.send_document(receiver.tg_id, document=post.media_id, caption=post.caption)
+                msg = bot.send_document(receiver.tg_id, document=post.media_id, caption=post.caption)
 
             elif post.type == 'media':
-                    msg = bot.send_media_group(receiver.tg_id, media=get_media_file_group(post))
-            
+                msg_media = bot.send_media_group(receiver.tg_id, media=get_media_file_group(post))
+                msg = msg_media[0]
+
+
             msg_ids.append(msg.id)
 
             post_in_chat = PostInChat.objects.create(post=post, chat_tg_id=receiver.tg_id, message_id=msg.id)
 
     
-    is_send_to_owner(post, chat_id, total_posts)
+    is_send_to_owner(posts_sent, chat_id)
 
 # отправлен ли пост отправителю
-def is_send_to_owner(post, chat_id, total_posts):
+def is_send_to_owner(posts_sent, chat_id):
     
-    for i in range(total_posts):
+    for post in posts_sent:
         if post.type == 'text':
             bot.send_message(chat_id, post.caption, reply_markup=pin_or_delete_btns(post.id))
 
@@ -93,4 +96,5 @@ def is_send_to_owner(post, chat_id, total_posts):
             bot.send_document(chat_id, document=post.media_id, caption=post.caption, reply_markup=pin_or_delete_btns(post.id))
 
         elif post.type == 'media':
-            bot.send_media_group(chat_id, media=get_media_file_group(post), reply_markup=pin_or_delete_btns(post.id))
+            bot.send_media_group(chat_id, media=get_media_file_group(post))
+            bot.send_message(chat_id, f'Пост {post.id}', reply_markup=pin_or_delete_btns(post.id))

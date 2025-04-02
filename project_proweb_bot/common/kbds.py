@@ -69,7 +69,7 @@ def forwarding_type_btns():
 
 CONTINUE_BTN = 'Далее'
 BACK_TO_MENU_BTN = 'Главное меню ↩️'
-ALL_GROUP_LANGUAGES = 'Все языки групп'
+ALL_GROUP_LANGUAGES = 'Все языки'
 ALL_USERS_LANGUAGES = 'Все языки пользователей'
 ALL_COURSES = 'Все курсы'
 MAILING_BTN = 'Рассылать'
