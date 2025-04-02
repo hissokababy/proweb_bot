@@ -1,3 +1,4 @@
+from tg_bot.filters import IsAdmin
 from tg_bot.credentials import TOKEN
 import telebot
 from telebot.storage import StateMemoryStorage
@@ -10,8 +11,8 @@ bot = telebot.TeleBot(TOKEN, state_storage=state_storage, parse_mode='HTML', use
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
-bot.add_custom_filter(custom_filters.IsDigitFilter())
-bot.add_custom_filter(custom_filters.TextMatchFilter())
+bot.add_custom_filter(IsAdmin())
+
 
 # necessary for state parameter in handlers.
 from telebot.states.sync.middleware import StateMiddleware

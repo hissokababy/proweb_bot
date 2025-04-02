@@ -1,7 +1,5 @@
 from django.db import models
 
-from tg_bot.bot import bot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # Create your models here.
 
 class User(models.Model):
@@ -25,14 +23,6 @@ class UserAdmin(models.Model):
     def __str__(self):
         return f'Администратор {self.user.tg_id} {self.user.username}'
     
-    def get_confirm(self):
-        if self.confirmed_by_user == False:
-            bot.send_message(self.user.tg_id, '<b>PROWEB</b> хочет назначить вас администратором, по подтверждаете?',
-                             reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text='Да, подтверждаю ✅', callback_data='confirm')))
-            return 'Не подтверждено пользователем'
-        else:
-            return 'Подтверждено пользователем'
-
     class Meta:
         verbose_name = 'Администратора'
         verbose_name_plural = 'Администраторы'
@@ -76,6 +66,8 @@ class PostInChat(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='chats', blank=True, null=True)
     chat_tg_id = models.BigIntegerField(verbose_name='Тг ид группы в котором пост')
     message_id = models.BigIntegerField(verbose_name='Тг ид поста', unique=True)
+    media_group_id = models.BigIntegerField(verbose_name='Ид медиа группы', blank=True, null=True)
+    # main = models.BooleanField(default=Fa)
 
     def __str__(self):
         return f'Чат в котором пост {self.chat_tg_id}'
@@ -89,6 +81,7 @@ class MediaGroupFile(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='files')
     type = models.CharField(verbose_name='Тип медиа', max_length=150, blank=True, null=True)
     media_id = models.TextField(verbose_name='Ид медиа файла')
+    message_id = models.BigIntegerField(verbose_name='Тг ид сообщения', blank=True, null=True)
 
     def __str__(self):
         return f'Файл медиа-группы {self.type}'

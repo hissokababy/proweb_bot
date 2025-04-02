@@ -6,22 +6,23 @@ from tg_bot.services.group import get_group_or_user_field
 from tg_bot.models import Group, MediaGroupFile, Post, User, UserAdmin
 
 from tg_bot.bot import bot
-from common.kbds import ALL_COURSES, ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, MAILING_BTN, go_back_or_mail, mail_or_forward
+from common.kbds import Btns, go_back_or_mail, mail_or_forward
+
+def make_admin(queryset):
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    btn = types.InlineKeyboardButton(text='Да, согласен', callback_data='confirm')
+    btn1 = types.InlineKeyboardButton(text='Не согласен', callback_data='cancel')
+
+    for user in queryset:
+        bot.send_message(user.user.tg_id, 'PROWEB хочет назначить вас администратором, вы согласны?', reply_markup=markup.add(btn, btn1))
+
+
 
 def admin_confirm(tg_id):
     user_admin = UserAdmin.objects.get(user__tg_id=tg_id)
     user_admin.confirmed_by_user = True
     user_admin.save()
 
-
-# проверка пользоваетя на админа
-def is_admin(tg_id):
-    admins = UserAdmin.objects.filter(confirmed_by_user=True)
-    lst = [i.user.tg_id for i in admins]
-
-    if tg_id in lst:
-        return True
-    
 
 # функция добавления поста в состояние post
 def add_post_to_state(state, message):
@@ -76,11 +77,7 @@ def add_post_to_state(state, message):
         else:
             post_data.remove(media_id)
 
-    elif message.media_group_id and is_forwarding:
-        bot.send_message(chat_id, 'Медиа группу нельзя пересылать')
-
-
-    elif message.media_group_id and not is_forwarding:
+    elif message.media_group_id:
         post_tg_id = message.id
         media_group_id = message.media_group_id
         type = 'media'
@@ -94,8 +91,10 @@ def add_post_to_state(state, message):
 
         post = Post.objects.filter(type=type, media_group_id=media_group_id).first()
         
-        if not post:            
+        if not post and not is_forwarding:            
             post = Post.objects.create(type=type, media_group_id=media_group_id, caption=caption, post_tg_id=message.id)
+        elif not post and is_forwarding:
+            post = Post.objects.create(type=type, media_group_id=media_group_id, caption=caption, post_tg_id=message.id, is_forwarding=int(message.chat.id))
 
         if message.video:
             media_type = 'video'
@@ -109,7 +108,7 @@ def add_post_to_state(state, message):
             media_type = 'document'
             media_id = message.document.file_id
 
-        post_file = MediaGroupFile.objects.create(post=post, media_id=media_id, type=media_type)
+        post_file = MediaGroupFile.objects.create(post=post, media_id=media_id, type=media_type, message_id=message.id)
     
     if len(post_data) >= 1:
         bot.send_message(chat_id, 'Пост готов, нажмите <b>"Отправить"</b>', reply_markup=go_back_or_mail())
@@ -130,19 +129,19 @@ def posts_mailing(state, message):
         forwarding = data.get('forwarding')
         
 
-    if language == ALL_USERS_LANGUAGES:
+    if language == Btns.ALL_USERS_LANGUAGES.value:
         receivers = User.objects.all()
 
-    elif language != ALL_USERS_LANGUAGES and language[0] in users_langs:
+    elif language != Btns.ALL_USERS_LANGUAGES.value and language[0] in users_langs:
         receivers = User.objects.filter(language_selected__in=users_langs)
 
-    elif language == ALL_GROUP_LANGUAGES and course != ALL_COURSES:
+    elif language == Btns.ALL_GROUP_LANGUAGES.value and course != Btns.ALL_COURSES.value:
         receivers = Group.objects.filter(course__in=course, is_in_group=True)
 
-    elif course == ALL_COURSES and language != ALL_GROUP_LANGUAGES:
+    elif course == Btns.ALL_COURSES.value and language != Btns.ALL_GROUP_LANGUAGES.value:
         receivers = Group.objects.filter(language__in=language, is_in_group=True)
 
-    elif language == ALL_GROUP_LANGUAGES and course == ALL_COURSES:
+    elif language == Btns.ALL_GROUP_LANGUAGES.value and course == Btns.ALL_COURSES.value:
         receivers = Group.objects.filter(is_in_group=True)
 
     else:
@@ -159,9 +158,4 @@ def posts_mailing(state, message):
         'receivers': receivers.count(),
     }
 
-    mailing_to_receivers(post_data, receivers, chat_id)
-    if not forwarding:
-        bot.send_message(chat_id, f"Рассылка выполнена успешно✅\n\nЯзыки: <b>{report['language']}</b>\nКурсы: <b>{report['course']}</b>\nПолучатели: <b>{report['receivers']}</b>")
-    else:
-        bot.send_message(chat_id, f"Перессылка выполнена успешно✅\n\nЯзыки: <b>{report['language']}</b>\nКурсы: <b>{report['course']}</b>\nПолучатели: <b>{report['receivers']}</b>")
-
+    mailing_to_receivers(post_data, receivers, chat_id, report)

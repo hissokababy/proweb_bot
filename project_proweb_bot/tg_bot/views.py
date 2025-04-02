@@ -1,6 +1,4 @@
-from tg_bot.services.group import add_bot_group
-from tg_bot import  group_handler, admin_handlers, user_handlers
-from tg_bot import models
+from tg_bot.handlers import group_handler, admin_handlers, user_handlers
 
 import telebot
 
@@ -18,6 +16,8 @@ def telegram_bot(request):
     bot.process_new_updates([update])
 
     # print(update.message)
+
+
     return HttpResponse('ok')
 
   else:

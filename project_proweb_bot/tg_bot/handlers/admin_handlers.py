@@ -1,45 +1,33 @@
 import telebot
 from telebot import types
-from telebot.states import State, StatesGroup
 from telebot.states.sync.context import StateContext
 
-from common.kbds import (ALL_COURSES, ALL_GROUP_LANGUAGES, ALL_USERS_LANGUAGES, BACK_TO_MENU_BTN, CONTINUE_BTN, FORWARDING, GROUP_FORWARDING_BTN, GROUP_MAILING_BTN, MAILING, PRIVATE_FORWARDING_BTN, PRIVATE_MAILING_BTN, SEND_POST, forwarding_type_btns, mailing_type_btns, confirm_delete, go_to_menu, go_back_or_mail, mail_or_forward, 
-                         mailing_courses, mailing_languages, main_btns_inline, main_btns_reply, pin_or_delete_btns, unpin_or_delete_btns)
+from common.kbds import (Btns, forwarding_type_btns, mailing_type_btns, confirm_delete, go_to_menu, 
+                         go_back_or_mail, mail_or_forward, 
+                         mailing_courses, mailing_languages, main_btns_inline, main_btns_reply, 
+                         pin_or_delete_btns, unpin_or_delete_btns)
+from django.db.models import Subquery, OuterRef
+
 from common.texts import texts
-from tg_bot.models import Post
+from tg_bot.models import Post, PostInChat
 from tg_bot.services.group import get_group_or_user_field
 from tg_bot.utils import is_btn
-from tg_bot.services.admin import admin_confirm, is_admin, posts_mailing
+from tg_bot.handlers.state import GroupMailing
+from tg_bot.services.admin import admin_confirm, posts_mailing
 from tg_bot.services.user import get_user_lang, save_user
 from tg_bot.bot import bot
 from tg_bot.services.admin import add_post_to_state
 
 
-class GroupMailing(StatesGroup):
-    language = State()
-    course = State()
-    post = State()
-    sending = State()
-    forwarding = State()
-
-@bot.message_handler(commands=['start'])
+@bot.message_handler(is_admin=True, commands=['start'])
 def admin_start_panel(message: types.Message):
     chat_id = message.chat.id
-    save_user(tg_user=message.from_user)
+    bot.send_message(chat_id, 'Админ панель', reply_markup=mail_or_forward())
 
-    if is_admin(chat_id):
-        bot.send_message(chat_id, 'Админ панель', reply_markup=mail_or_forward())
-    else:
-      user_lang = get_user_lang(tg_id=message.from_user.id)
-
-      bot.send_message(chat_id, texts[user_lang]['welcome']['hello_msg'], reply_markup=main_btns_reply(user_lang, 'main'))
-      
-      bot.send_message(chat_id, texts[user_lang]['welcome']['greeting'], reply_markup=main_btns_inline(user_lang, 'main'))
 
 # обраюотчик кнопка главное меню 
-@bot.message_handler(func=lambda message: is_btn(message.text, BACK_TO_MENU_BTN))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.BACK_TO_MENU_BTN.value))
 def main_menu_btn_handler(message: types.Message, state: StateContext):
-    
     admin_start_panel(message)
     state.delete()
 
@@ -52,20 +40,20 @@ def admin_panel(call: types.CallbackQuery):
     admin_start_panel(call.message)
 
 
-@bot.message_handler(func=lambda message: is_btn(message.text, MAILING))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.MAILING.value))
 def handle_mailing(message: types.Message):
     chat_id = message.chat.id
     bot.send_message(chat_id, 'Выберите тип чата', reply_markup=mailing_type_btns())
 
 
-@bot.message_handler(func=lambda message: is_btn(message.text, FORWARDING))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.FORWARDING.value))
 def handle_forwarding(message: types.Message):
     chat_id = message.chat.id
     bot.send_message(chat_id, 'Выберите тип чата', reply_markup=forwarding_type_btns())
 
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('post_'))
+@bot.callback_query_handler(is_admin=True, func=lambda call: call.data.startswith('post_'))
 def handle_post(call: types.CallbackQuery):
     chat_id = call.message.chat.id
 
@@ -73,27 +61,44 @@ def handle_post(call: types.CallbackQuery):
 
     post = Post.objects.filter(id=post_id).first()
 
-    post_in_chat_ids = post.chats.all()
+    post_in_chats_all = post.chats.all()
 
+    post_in_chats = PostInChat.objects.filter(
+        id=Subquery(
+            post.chats.filter(chat_tg_id=OuterRef("chat_tg_id")).values("pk")[:1]
+        )
+    )
     if action == 'delete':
         msg = bot.edit_message_reply_markup(chat_id, call.message.id, reply_markup=confirm_delete(post.id))
         bot.answer_callback_query(msg.id, 'Вы действительно хотите удалить этот пост?')
 
     elif action == 'pin':
-        for chat in post_in_chat_ids:
-            msg = bot.pin_chat_message(chat_id=int(chat.chat_tg_id), message_id=int(chat.message_id))
-            bot.answer_callback_query(call.id, 'Пост был закреплён')
+        if post.type == 'media':
+            for i in post_in_chats:
+                msg = bot.pin_chat_message(chat_id=i.chat_tg_id, message_id=i.message_id)
+
+                bot.answer_callback_query(call.id, 'Пост был закреплён')
+
+        else:
+            for i in post_in_chats_all:
+                msg = bot.pin_chat_message(chat_id=i.chat_tg_id, message_id=i.message_id)
+
+
         bot.edit_message_reply_markup(chat_id, call.message.id, reply_markup=unpin_or_delete_btns(post_id))
 
     elif action == 'unpin':
-        for chat in post_in_chat_ids:
-            msg = bot.unpin_chat_message(chat_id=int(chat.chat_tg_id), message_id=int(chat.message_id))
-            bot.answer_callback_query(call.id, 'Пост был откреплён')
+        for chat in post_in_chats_all:
+            try:
+                msg = bot.unpin_chat_message(chat_id=int(chat.chat_tg_id), message_id=int(chat.message_id))
+                bot.answer_callback_query(call.id, 'Пост был откреплён')
+            except Exception as e:
+                print(e)
+                pass
         bot.edit_message_reply_markup(chat_id, call.message.id, reply_markup=pin_or_delete_btns(post_id))
 
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('delete_'))
+@bot.callback_query_handler(is_admin=True, func=lambda call: call.data.startswith('delete_'))
 def confirm_delete_handler(call: types.CallbackQuery):
     chat_id = call.message.chat.id
 
@@ -106,7 +111,11 @@ def confirm_delete_handler(call: types.CallbackQuery):
 
     if action == 'yes':
         for chat in post_in_chat_ids:
-            bot.delete_message(chat.chat_tg_id, chat.message_id)
+            try:
+                bot.delete_message(chat.chat_tg_id, chat.message_id)
+            except Exception as e:
+                print(e)
+                pass
         bot.send_message(chat_id, 'Пост был удалён')
         bot.delete_message(chat_id, call.message.id)
 
@@ -115,50 +124,46 @@ def confirm_delete_handler(call: types.CallbackQuery):
 
 
 # расслыка по группам
-@bot.message_handler(func=lambda message: is_btn(message.text, GROUP_MAILING_BTN))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.GROUP_MAILING_BTN.value))
 def group_mailing(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
-    if is_admin(chat_id):
-        state.set(GroupMailing.language)
-        bot.send_message(chat_id, 'Выберите язык', reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
+    state.set(GroupMailing.language)
+    bot.send_message(chat_id, 'Выберите язык', reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
     
 
 # расслыка по личным чатам
-@bot.message_handler(func=lambda message: is_btn(message.text, PRIVATE_MAILING_BTN))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.PRIVATE_MAILING_BTN.value))
 def private_mailing(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
-    if is_admin(chat_id):
-        state.set(GroupMailing.language)
-        bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_or_user_field(private=True)))
+    state.set(GroupMailing.language)
+    bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_or_user_field(private=True)))
     
 
 # перессылка по группам
-@bot.message_handler(func=lambda message: is_btn(message.text, GROUP_FORWARDING_BTN))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.GROUP_FORWARDING_BTN.value))
 def group_forwarding(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
-    if is_admin(chat_id):
-        state.set(GroupMailing.language)
-        state.add_data(forwarding=True)
-        bot.send_message(chat_id, 'Выберите язык', reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
+    state.set(GroupMailing.language)
+    state.add_data(forwarding=True)
+    bot.send_message(chat_id, 'Выберите язык', reply_markup=mailing_languages(get_group_or_user_field(language=True), groups=True))
     
 
 # перессылка по личным чатам
-@bot.message_handler(func=lambda message: is_btn(message.text, PRIVATE_FORWARDING_BTN))
+@bot.message_handler(is_admin=True, func=lambda message: is_btn(message.text, Btns.PRIVATE_FORWARDING_BTN.value))
 def private_forwarding(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
-    if is_admin(chat_id):
-        state.set(GroupMailing.language)
-        state.add_data(forwarding=True)
-        bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_or_user_field(private=True)))
+    state.set(GroupMailing.language)
+    state.add_data(forwarding=True)
+    bot.send_message(chat_id, 'Выберите язык пользователей', reply_markup=mailing_languages(get_group_or_user_field(private=True)))
 
 
 # обраюотчик кнопка далее 
-@bot.message_handler(state=[GroupMailing.language, GroupMailing.course], 
-                     func=lambda message: is_btn(message.text, CONTINUE_BTN))
+@bot.message_handler(is_admin=True, state=[GroupMailing.language, GroupMailing.course], 
+                     func=lambda message: is_btn(message.text, Btns.CONTINUE_BTN.value))
 def continue_handler(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
@@ -205,21 +210,21 @@ def continue_handler(message: types.Message, state: StateContext):
                 bot.send_message(chat_id, 'Выберите хотябы один курс')
 
 
-@bot.message_handler(state=GroupMailing.language)
+@bot.message_handler(is_admin=True, state=GroupMailing.language)
 def get_language(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     
     users_langs = get_group_or_user_field(private=True)
 
-    if not message.text in get_group_or_user_field(language=True) and message.text != ALL_GROUP_LANGUAGES and message.text != ALL_USERS_LANGUAGES:
+    if not message.text in get_group_or_user_field(language=True) and message.text != Btns.ALL_GROUP_LANGUAGES.value and message.text != Btns.ALL_USERS_LANGUAGES:
         bot.send_message(chat_id, 'Пожалуйста выберите язык ниже')
     else:
-        if message.text == ALL_GROUP_LANGUAGES:
+        if message.text == Btns.ALL_GROUP_LANGUAGES.value:
             state.add_data(language=message.text)
             bot.send_message(chat_id, f"Выберите курс", reply_markup=mailing_courses(get_group_or_user_field(course=True)))
             state.set(GroupMailing.course)
 
-        elif message.text == ALL_USERS_LANGUAGES:
+        elif message.text == Btns.ALL_USERS_LANGUAGES.value:
             state.add_data(language=message.text)
             bot.send_message(chat_id, f"Отправляйте пост", reply_markup=go_to_menu())
             state.set(GroupMailing.post)
@@ -247,10 +252,10 @@ def get_language(message: types.Message, state: StateContext):
                 bot.send_message(chat_id, 'Выберите язык')
 
 
-@bot.message_handler(state=GroupMailing.course) 
+@bot.message_handler(is_admin=True, state=GroupMailing.course) 
 def course_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
-    if not message.text in get_group_or_user_field(course=True) and message.text != ALL_COURSES:
+    if not message.text in get_group_or_user_field(course=True) and message.text != Btns.ALL_COURSES.value:
         bot.send_message(chat_id, 'Пожалуйста выберите курс ниже')
 
     else:
@@ -287,7 +292,7 @@ def course_state(message: types.Message, state: StateContext):
 
 
 
-@bot.message_handler(state=[GroupMailing.post, GroupMailing.sending], func=lambda message: is_btn(message.text, SEND_POST)) 
+@bot.message_handler(is_admin=True, state=[GroupMailing.post, GroupMailing.sending], func=lambda message: is_btn(message.text, Btns.SEND_POST.value)) 
 def sending_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
 
@@ -298,7 +303,7 @@ def sending_state(message: types.Message, state: StateContext):
     admin_start_panel(message)
 
 
-@bot.message_handler(state=GroupMailing.post, content_types=['text', 'photo', 'video', 'document', 'voice', 'audio']) 
+@bot.message_handler(is_admin=True, state=GroupMailing.post, content_types=['text', 'photo', 'video', 'document', 'voice', 'audio']) 
 def post_state(message: types.Message, state: StateContext):
     chat_id = message.chat.id
     add_post_to_state(state, message)

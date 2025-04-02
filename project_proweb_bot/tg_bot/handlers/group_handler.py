@@ -28,11 +28,4 @@ def group_left_handler(message: types.Message):
         left_bot_group(message.chat.id)
 
 
-@bot.message_handler(chat_types=['supergroup', 'group'])
-def get_post_id(message: types.Message):
-    
-    print(message.chat)
-
-    mgs = bot.send_message(message.chat.id, f'msg_id = {message.id}')
-
 

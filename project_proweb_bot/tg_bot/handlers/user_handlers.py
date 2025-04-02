@@ -5,26 +5,19 @@ from telebot import types
 from common.texts import texts
 from common.kbds import main_btns_inline, main_btns_reply
 
-from tg_bot.services.admin import is_admin
 from tg_bot.services.user import get_user_lang, save_user, set_user_lang
 
 
-from tg_bot.admin_handlers import admin_panel
-
 @bot.message_handler(commands=['start',])
 def start_message(message: types.Message):
-    chat_id = message.chat.id
-    save_user(tg_user=message.from_user)
-    
-    if is_admin(chat_id):
-         admin_panel(message)
+   chat_id = message.chat.id
+   save_user(tg_user=message.from_user)
+   
+   user_lang = get_user_lang(tg_id=message.from_user.id)
 
-    else:
-      user_lang = get_user_lang(tg_id=message.from_user.id)
-
-      bot.send_message(chat_id, texts[user_lang]['welcome']['hello_msg'], reply_markup=main_btns_reply(user_lang, 'main'))
+   bot.send_message(chat_id, texts[user_lang]['welcome']['hello_msg'], reply_markup=main_btns_reply(user_lang, 'main'))
       
-      bot.send_message(chat_id, texts[user_lang]['welcome']['greeting'], reply_markup=main_btns_inline(user_lang, 'main'))
+   bot.send_message(chat_id, texts[user_lang]['welcome']['greeting'], reply_markup=main_btns_inline(user_lang, 'main'))
 
 
 @bot.message_handler(content_types=['text', 'contact'])
